@@ -1,0 +1,1180 @@
+// package.json
+{
+  "name": "ai-proposal-optimization-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "react-router-dom": "^6.8.1",
+    "axios": "^1.3.4",
+    "recharts": "^2.5.0",
+    "@mui/material": "^5.11.10",
+    "@mui/icons-material": "^5.11.9",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mui/x-date-pickers": "^6.0.3",
+    "dayjs": "^1.11.7",
+    "react-query": "^3.39.3",
+    "zustand": "^4.3.6",
+    "react-hook-form": "^7.43.5",
+    "react-hot-toast": "^2.4.0",
+    "socket.io-client": "^4.6.1",
+    "framer-motion": "^10.2.4",
+    "lodash": "^4.17.21",
+    "@types/lodash": "^4.14.191"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:8000"
+}
+
+// src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from 'react-hot-toast';
+
+// Components
+import Layout from './components/Layout/Layout';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Projects from './pages/Projects/Projects';
+import ProjectDetail from './pages/Projects/ProjectDetail';
+import CreateProject from './pages/Projects/CreateProject';
+import Bids from './pages/Bids/Bids';
+import BidOptimization from './pages/Bids/BidOptimization';
+import Analytics from './pages/Analytics/Analytics';
+import Profile from './pages/Profile/Profile';
+
+// Hooks and utilities
+import { useAuthStore } from './store/authStore';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+
+// Theme configuration
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+    background: {
+      default: '#f5f5f5',
+      paper: '#ffffff',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 600,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 600,
+    },
+    h3: {
+      fontSize: '1.75rem',
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        },
+      },
+    },
+  },
+});
+
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+function App() {
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Add a proper loading spinner
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Routes>
+            {/* Public routes */}
+            <Route 
+              path="/login" 
+              element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} 
+            />
+            <Route 
+              path="/register" 
+              element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} 
+            />
+            
+            {/* Protected routes */}
+            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="/dashboard" />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="projects/new" element={<CreateProject />} />
+              <Route path="projects/:id" element={<ProjectDetail />} />
+              <Route path="bids" element={<Bids />} />
+              <Route path="bids/optimize/:projectId" element={<BidOptimization />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+            
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </Router>
+        <Toaster position="top-right" />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
+
+// src/store/authStore.js
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import api from '../services/api';
+
+const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: true,
+
+      // Actions
+      login: async (credentials) => {
+        try {
+          const response = await api.post('/auth/login', credentials);
+          const { access_token, user } = response.data;
+          
+          set({
+            user,
+            token: access_token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          
+          // Set token in API headers
+          api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+          
+          return { success: true };
+        } catch (error) {
+          set({ isLoading: false });
+          return { 
+            success: false, 
+            error: error.response?.data?.detail || 'Login failed' 
+          };
+        }
+      },
+
+      register: async (userData) => {
+        try {
+          const response = await api.post('/auth/register', userData);
+          const { access_token, user } = response.data;
+          
+          set({
+            user,
+            token: access_token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          
+          api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+          
+          return { success: true };
+        } catch (error) {
+          set({ isLoading: false });
+          return { 
+            success: false, 
+            error: error.response?.data?.detail || 'Registration failed' 
+          };
+        }
+      },
+
+      logout: () => {
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+        
+        // Remove token from API headers
+        delete api.defaults.headers.common['Authorization'];
+      },
+
+      refreshToken: async () => {
+        try {
+          const response = await api.post('/auth/refresh');
+          const { access_token, user } = response.data;
+          
+          set({
+            user,
+            token: access_token,
+            isAuthenticated: true,
+          });
+          
+          api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+          
+          return true;
+        } catch (error) {
+          get().logout();
+          return false;
+        }
+      },
+
+      initialize: () => {
+        const { token } = get();
+        
+        if (token) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          set({ isAuthenticated: true });
+        }
+        
+        set({ isLoading: false });
+      },
+    }),
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);
+
+export { useAuthStore };
+
+// src/services/api.js
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    const { response } = error;
+    
+    if (response?.status === 401) {
+      // Handle unauthorized access
+      const authStore = require('../store/authStore').useAuthStore;
+      authStore.getState().logout();
+      window.location.href = '/login';
+    } else if (response?.status === 429) {
+      toast.error('Rate limit exceeded. Please try again later.');
+    } else if (response?.status >= 500) {
+      toast.error('Server error. Please try again later.');
+    } else if (response?.data?.detail) {
+      toast.error(response.data.detail);
+    } else {
+      toast.error('An unexpected error occurred.');
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+// src/services/websocket.js
+import io from 'socket.io-client';
+import { useAuthStore } from '../store/authStore';
+
+class WebSocketService {
+  constructor() {
+    this.socket = null;
+    this.isConnected = false;
+  }
+
+  connect() {
+    const { token, user } = useAuthStore.getState();
+    
+    if (!token || !user) {
+      console.warn('Cannot connect to WebSocket: No authentication');
+      return;
+    }
+
+    const socketUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
+    
+    this.socket = io(`${socketUrl}/ws/${user.id}`, {
+      query: { token },
+      transports: ['websocket'],
+    });
+
+    this.socket.on('connect', () => {
+      console.log('WebSocket connected');
+      this.isConnected = true;
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+      this.isConnected = false;
+    });
+
+    this.socket.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+
+    return this.socket;
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.isConnected = false;
+    }
+  }
+
+  subscribe(eventType, callback) {
+    if (this.socket) {
+      this.socket.on(eventType, callback);
+    }
+  }
+
+  unsubscribe(eventType, callback) {
+    if (this.socket) {
+      this.socket.off(eventType, callback);
+    }
+  }
+
+  joinRoom(room) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('join_room', { room });
+    }
+  }
+
+  leaveRoom(room) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('leave_room', { room });
+    }
+  }
+}
+
+const wsService = new WebSocketService();
+export default wsService;
+
+// src/components/Auth/ProtectedRoute.js
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Replace with proper loading component
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;
+
+// src/components/Layout/Layout.js
+import React, { useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
+import { Box, Container } from '@mui/material';
+import Sidebar from './Sidebar';
+import Header from './Header';
+import { useAuthStore } from '../../store/authStore';
+import wsService from '../../services/websocket';
+
+const Layout = () => {
+  const { initialize } = useAuthStore();
+
+  useEffect(() => {
+    // Initialize auth store
+    initialize();
+    
+    // Connect to WebSocket
+    wsService.connect();
+    
+    // Cleanup on unmount
+    return () => {
+      wsService.disconnect();
+    };
+  }, [initialize]);
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar />
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Header />
+        <Container 
+          maxWidth="xl" 
+          sx={{ 
+            flexGrow: 1, 
+            py: 3,
+            px: { xs: 2, sm: 3 } 
+          }}
+        >
+          <Outlet />
+        </Container>
+      </Box>
+    </Box>
+  );
+};
+
+export default Layout;
+
+// src/components/Layout/Sidebar.js
+import React from 'react';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
+  Divider,
+  Box,
+} from '@mui/material';
+import {
+  Dashboard,
+  Work,
+  Assignment,
+  Analytics,
+  Person,
+  TrendingUp,
+} from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
+
+const drawerWidth = 240;
+
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuthStore();
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
+    { 
+      text: user?.role === 'client' ? 'My Projects' : 'Available Projects', 
+      icon: <Work />, 
+      path: '/projects' 
+    },
+    { 
+      text: user?.role === 'client' ? 'Received Bids' : 'My Bids', 
+      icon: <Assignment />, 
+      path: '/bids' 
+    },
+    { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
+    { text: 'Market Intelligence', icon: <TrendingUp />, path: '/market' },
+    { text: 'Profile', icon: <Person />, path: '/profile' },
+  ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          backgroundColor: 'background.paper',
+          borderRight: '1px solid',
+          borderColor: 'divider',
+        },
+      }}
+    >
+      <Toolbar>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <TrendingUp color="primary" />
+          <Typography variant="h6" component="div" fontWeight="bold">
+            AI Proposals
+          </Typography>
+        </Box>
+      </Toolbar>
+      <Divider />
+      <List>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              selected={location.pathname === item.path}
+              onClick={() => handleNavigation(item.path)}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.light',
+                  color: 'primary.contrastText',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.contrastText',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Drawer>
+  );
+};
+
+export default Sidebar;
+
+// src/components/Layout/Header.js
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Box,
+  Badge,
+  Tooltip,
+} from '@mui/material';
+import {
+  AccountCircle,
+  Notifications,
+  Settings,
+  Logout,
+} from '@mui/icons-material';
+import { useAuthStore } from '../../store/authStore';
+import { useNavigate } from 'react-router-dom';
+
+const Header = () => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    handleClose();
+  };
+
+  const handleProfile = () => {
+    navigate('/profile');
+    handleClose();
+  };
+
+  return (
+    <AppBar 
+      position="static" 
+      color="inherit" 
+      elevation={1}
+      sx={{ 
+        backgroundColor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          Welcome back, {user?.name}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title="Notifications">
+            <IconButton color="inherit">
+              <Badge badgeContent={3} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+          
+          <Tooltip title="Account settings">
+            <IconButton
+              size="large"
+              onClick={handleMenu}
+              color="inherit"
+            >
+              <Avatar sx={{ width: 32, height: 32 }}>
+                {user?.name?.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+          
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            onClick={handleClose}
+            PaperProps={{
+              elevation: 3,
+              sx: {
+                overflow: 'visible',
+                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                mt: 1.5,
+                '& .MuiAvatar-root': {
+                  width: 32,
+                  height: 32,
+                  ml: -0.5,
+                  mr: 1,
+                },
+              },
+            }}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <MenuItem onClick={handleProfile}>
+              <AccountCircle sx={{ mr: 2 }} />
+              Profile
+            </MenuItem>
+            <MenuItem onClick={handleClose}>
+              <Settings sx={{ mr: 2 }} />
+              Settings
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <Logout sx={{ mr: 2 }} />
+              Logout
+            </MenuItem>
+          </Menu>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Header;
+
+// src/hooks/useProjects.js
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import api from '../services/api';
+import toast from 'react-hot-toast';
+
+export const useProjects = (params = {}) => {
+  return useQuery(
+    ['projects', params],
+    async () => {
+      const response = await api.get('/projects', { params });
+      return response.data;
+    },
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
+  );
+};
+
+export const useProject = (projectId) => {
+  return useQuery(
+    ['project', projectId],
+    async () => {
+      const response = await api.get(`/projects/${projectId}`);
+      return response.data;
+    },
+    {
+      enabled: !!projectId,
+    }
+  );
+};
+
+export const useCreateProject = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation(
+    async (projectData) => {
+      const response = await api.post('/projects', projectData);
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('projects');
+        toast.success('Project created successfully!');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.detail || 'Failed to create project');
+      },
+    }
+  );
+};
+
+export const useUpdateProject = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation(
+    async ({ projectId, ...updateData }) => {
+      const response = await api.put(`/projects/${projectId}`, updateData);
+      return response.data;
+    },
+    {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries(['project', data.id]);
+        queryClient.invalidateQueries('projects');
+        toast.success('Project updated successfully!');
+      },
+    }
+  );
+};
+
+// src/hooks/useBids.js
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import api from '../services/api';
+import toast from 'react-hot-toast';
+
+export const useBids = (params = {}) => {
+  return useQuery(
+    ['bids', params],
+    async () => {
+      const response = await api.get('/bids', { params });
+      return response.data;
+    }
+  );
+};
+
+export const useSubmitBid = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation(
+    async (bidData) => {
+      const response = await api.post('/bids', bidData);
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('bids');
+        queryClient.invalidateQueries('projects');
+        toast.success('Bid submitted successfully!');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.detail || 'Failed to submit bid');
+      },
+    }
+  );
+};
+
+export const useBidOptimization = (projectId) => {
+  return useQuery(
+    ['bid-optimization', projectId],
+    async () => {
+      const response = await api.get(`/bids/optimize?project_id=${projectId}`);
+      return response.data;
+    },
+    {
+      enabled: !!projectId,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    }
+  );
+};
+
+// src/hooks/useAnalytics.js
+import { useQuery } from 'react-query';
+import api from '../services/api';
+
+export const useDashboardAnalytics = (days = 30) => {
+  return useQuery(
+    ['dashboard-analytics', days],
+    async () => {
+      const response = await api.get(`/analytics/dashboard?days=${days}`);
+      return response.data;
+    },
+    {
+      staleTime: 10 * 60 * 1000, // 10 minutes
+    }
+  );
+};
+
+export const useMarketIntelligence = (filters = {}) => {
+  return useQuery(
+    ['market-intelligence', filters],
+    async () => {
+      const params = new URLSearchParams(filters).toString();
+      const response = await api.get(`/analytics/market-intelligence?${params}`);
+      return response.data;
+    },
+    {
+      staleTime: 15 * 60 * 1000, // 15 minutes
+    }
+  );
+};
+
+// src/components/Common/LoadingSpinner.js
+import React from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
+
+const LoadingSpinner = ({ message = 'Loading...', size = 40 }) => {
+  return (
+    <Box 
+      display="flex" 
+      flexDirection="column" 
+      alignItems="center" 
+      justifyContent="center" 
+      p={3}
+    >
+      <CircularProgress size={size} />
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+        {message}
+      </Typography>
+    </Box>
+  );
+};
+
+export default LoadingSpinner;
+
+// src/components/Common/StatCard.js
+import React from 'react';
+import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
+import { TrendingUp, TrendingDown, Info } from '@mui/icons-material';
+
+const StatCard = ({ 
+  title, 
+  value, 
+  change, 
+  changeType = 'positive', 
+  icon, 
+  color = 'primary' 
+}) => {
+  const isPositive = changeType === 'positive';
+  const TrendIcon = isPositive ? TrendingUp : TrendingDown;
+
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography color="text.secondary" gutterBottom variant="body2">
+              {title}
+            </Typography>
+            <Typography variant="h4" component="div" fontWeight="bold">
+              {value}
+            </Typography>
+            {change && (
+              <Box display="flex" alignItems="center" mt={1}>
+                <TrendIcon 
+                  fontSize="small" 
+                  color={isPositive ? 'success' : 'error'} 
+                />
+                <Typography 
+                  variant="body2" 
+                  color={isPositive ? 'success.main' : 'error.main'}
+                  sx={{ ml: 0.5 }}
+                >
+                  {change}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          {icon && (
+            <IconButton 
+              sx={{ 
+                backgroundColor: `${color}.light`, 
+                color: `${color}.main`,
+                '&:hover': {
+                  backgroundColor: `${color}.main`,
+                  color: 'white',
+                }
+              }}
+            >
+              {icon}
+            </IconButton>
+          )}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default StatCard;
+
+// src/components/Common/DataTable.js
+import React, { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+} from '@mui/material';
+import { MoreVert, Visibility, Edit, Delete } from '@mui/icons-material';
+
+const DataTable = ({ 
+  data = [], 
+  columns = [], 
+  onView, 
+  onEdit, 
+  onDelete,
+  title,
+  emptyMessage = "No data available"
+}) => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleMenuClick = (event, row) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedRow(row);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedRow(null);
+  };
+
+  const renderCellValue = (value, column) => {
+    if (column.type === 'status') {
+      const color = column.statusColors?.[value] || 'default';
+      return <Chip label={value} color={color} size="small" />;
+    }
+    
+    if (column.type === 'currency') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(value);
+    }
+    
+    if (column.type === 'date') {
+      return new Date(value).toLocaleDateString();
+    }
+    
+    if (column.render) {
+      return column.render(value);
+    }
+    
+    return value;
+  };
+
+  const paginatedData = data.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  return (
+    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+      {title && (
+        <Box p={2}>
+          <Typography variant="h6" component="div">
+            {title}
+          </Typography>
+        </Box>
+      )}
+      
+      <TableContainer>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell 
+                  key={column.id}
+                  style={{ minWidth: column.minWidth }}
+                  align={column.align || 'left'}
+                >
+                  {column.label}
+                </TableCell>
+              ))}
+              {(onView || onEdit || onDelete) && (
+                <TableCell align="right">Actions</TableCell>
+              )}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedData.length === 0 ? (
+              <TableRow>
+                <TableCell 
+                  colSpan={columns.length + 1} 
+                  align="center"
+                  sx={{ py: 4 }}
+                >
+                  <Typography color="text.secondary">
+                    {emptyMessage}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedData.map((row, index) => (
+                <TableRow hover key={row.id || index}>
+                  {columns.map((column) => (
+                    <TableCell 
+                      key={column.id}
+                      align={column.align || 'left'}
+                    >
+                      {renderCellValue(row[column.id], column)}
+                    </TableCell>
+                  ))}
+                  {(onView || onEdit || onDelete) && (
+                    <TableCell align="right">
+                      <IconButton
+                        onClick={(e) => handleMenuClick(e, row)}
+                        size="small"
+                      >
+                        <MoreVert />
+                      </IconButton>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={data.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        {onView && (
+          <MenuItem onClick={() => {
+            onView(selectedRow);
+            handleMenuClose();
+          }}>
+            <Visibility sx={{ mr: 1 }} fontSize="small" />
+            View
+          </MenuItem>
+        )}
+        {onEdit && (
+          <MenuItem onClick={() => {
+            onEdit(selectedRow);
+            handleMenuClose();
+          }}>
+            <Edit sx={{ mr: 1 }} fontSize="small" />
+            Edit
+          </MenuItem>
+        )}
+        {onDelete && (
+          <MenuItem onClick={() => {
+            onDelete(selectedRow);
+            handleMenuClose();
+          }}>
+            <Delete sx={{ mr: 1 }} fontSize="small" />
+            Delete
+          </MenuItem>
+        )}
+      </Menu>
+    </Paper>
+  );
+};
+
+export default DataTable;

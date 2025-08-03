@@ -50,8 +50,14 @@ app.config['SECRET_KEY'] = 'dev-secret-key'
 app.config['UPLOAD_FOLDER'] = 'data/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Enable CORS for all routes
-CORS(app, origins=['http://localhost:3000', 'http://localhost:8080'])
+# Enable CORS for all routes - allow GitHub Pages and localhost
+CORS(app, origins=[
+    'http://localhost:3000', 
+    'http://localhost:8080', 
+    'http://localhost:5000',
+    'https://knkasibhatla.github.io',
+    'https://knkasibhatla.github.io/ai-proposal-optimization'
+], supports_credentials=True)
 
 # Integrate dynamic API endpoints (no static data)
 if DYNAMIC_API_AVAILABLE:
@@ -1652,9 +1658,17 @@ def dashboard():
     """Redirect to advanced frontend"""
     return redirect('/frontend/public/advanced-app.html')
 
-@app.route('/api/upload', methods=['POST'])
+@app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
     """Upload and process data file"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
     try:
         global current_data, ai_engine
         
@@ -2870,7 +2884,7 @@ def api_get_clients():
 
 
 
-@app.route('/api/predict-pricing', methods=['POST'])
+@app.route('/api/predict-pricing', methods=['POST', 'OPTIONS'])
 def api_predict_pricing():
     """FIXED: Advanced pricing prediction with dynamic results"""
     try:

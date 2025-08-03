@@ -2586,157 +2586,142 @@
             detailHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
             detailHtml += '<thead><tr style="background: #f8f9fa;">';
             detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Client</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Our Historical Bid</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Winning Bid Price</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Recommended Bid</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Predicted Outcome</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Win Probability</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Actual Outcome</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Model Accuracy</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Impact Analysis</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Total Bids</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Wins/Losses</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Win Rate</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Avg Historical Bid</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Avg AI Recommended</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Winning Bidders</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Accuracy</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Opportunity</th>';
             detailHtml += '</tr></thead><tbody>';
             
-            // Process real validation results (limit to first 20 for display)
-            const limitedResults = validationData.validations.slice(0, displayLimit);
-            
-            limitedResults.forEach(function(result, index) {
-                try {
-                    const actualWin = result.actual_outcome === 'win';
-                    const predictedWin = result.predicted_outcome === 'win';
-                    const accuracy = actualWin === predictedWin;
+            // Group results by client to avoid duplicates
+            const clientGroups = {};
+            validationData.validations.forEach(function(result) {
+                const clientId = result.client_id || 'Unknown';
+                if (!clientGroups[clientId]) {
+                    clientGroups[clientId] = {
+                        client_id: clientId,
+                        bids: [],
+                        wins: 0,
+                        losses: 0,
+                        correct_predictions: 0,
+                        total_bid_value: 0,
+                        total_recommended_value: 0,
+                        winning_bidders: new Set()
+                    };
+                }
                 
-                // Determine row color based on accuracy
-                let rowClass = '';
-                if (accuracy && actualWin) {
-                    rowClass = 'style="background: #d4edda;"'; // Green for correct win prediction
-                } else if (accuracy && !actualWin) {
-                    rowClass = 'style="background: #f8d7da;"'; // Light red for correct loss prediction
-                } else if (!accuracy && actualWin) {
-                    rowClass = 'style="background: #fff3cd;"'; // Yellow for missed opportunity
+                clientGroups[clientId].bids.push(result);
+                clientGroups[clientId].total_bid_value += (result.historical_bid || 0);
+                clientGroups[clientId].total_recommended_value += (result.recommended_price || result.historical_bid || 0);
+                
+                const actualWin = result.actual_outcome === 'win';
+                const predictedWin = result.predicted_outcome === 'win';
+                
+                if (actualWin) {
+                    clientGroups[clientId].wins++;
+                    clientGroups[clientId].winning_bidders.add('Us');
                 } else {
-                    rowClass = 'style="background: #f1f3f4;"'; // Gray for incorrect prediction
+                    clientGroups[clientId].losses++;
+                    // Add competitor as winning bidder if available
+                    const winningBidder = result.winning_bidder || result.winner_id || 'Competitor';
+                    if (winningBidder !== 'Unknown') {
+                        clientGroups[clientId].winning_bidders.add(winningBidder);
+                    }
+                }
+                
+                if (actualWin === predictedWin) {
+                    clientGroups[clientId].correct_predictions++;
+                }
+            });
+            
+            // Convert to array and limit display
+            const clientArray = Object.values(clientGroups).slice(0, displayLimit);
+            
+            clientArray.forEach(function(clientData, index) {
+                try {
+                    const totalBids = clientData.bids.length;
+                    const winRate = totalBids > 0 ? (clientData.wins / totalBids * 100) : 0;
+                    const aiAccuracy = totalBids > 0 ? (clientData.correct_predictions / totalBids * 100) : 0;
+                    const avgHistoricalBid = totalBids > 0 ? (clientData.total_bid_value / totalBids) : 0;
+                    const avgRecommendedBid = totalBids > 0 ? (clientData.total_recommended_value / totalBids) : 0;
+                
+                // Determine row color based on win rate and AI accuracy
+                let rowClass = '';
+                if (winRate >= 75) {
+                    rowClass = 'style="background: #d4edda;"'; // Green for high win rate
+                } else if (winRate >= 50) {
+                    rowClass = 'style="background: #fff3cd;"'; // Yellow for medium win rate
+                } else if (winRate >= 25) {
+                    rowClass = 'style="background: #f8d7da;"'; // Light red for low win rate
+                } else {
+                    rowClass = 'style="background: #f1f3f4;"'; // Gray for very low win rate
                 }
                 
                 detailHtml += '<tr ' + rowClass + '>';
                 
                 // Client ID
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + (result.client_id || 'Unknown') + '</td>';
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + clientData.client_id + '</td>';
                 
-                // Historical Bid
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">$' + (result.historical_bid || 0).toLocaleString() + '</td>';
+                // Total Bids
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + totalBids + '</td>';
                 
-                // Winning Bid Price (who actually won and at what price)
-                const winningPrice = result.winning_price || 0;
-                let winningPriceDisplay;
-                if (actualWin) {
-                    // We won - show our bid was the winning bid
-                    winningPriceDisplay = '$' + (result.historical_bid || 0).toLocaleString() + ' (Us)';
-                } else if (winningPrice > 0) {
-                    // We lost - show competitor's winning bid
-                    winningPriceDisplay = '$' + winningPrice.toLocaleString() + ' (Competitor)';
+                // Wins/Losses
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + 
+                    '<span style="color: #28a745; font-weight: bold;">' + clientData.wins + '</span> / ' +
+                    '<span style="color: #dc3545; font-weight: bold;">' + clientData.losses + '</span></td>';
+                
+                // Win Rate
+                const winRateColor = winRate >= 50 ? '#28a745' : '#dc3545';
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + winRateColor + ';">' + 
+                    winRate.toFixed(1) + '%</td>';
+                
+                // Average Historical Bid
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">$' + 
+                    avgHistoricalBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                
+                // Average AI Recommended Bid
+                const recommendColor = avgRecommendedBid > avgHistoricalBid ? '#28a745' : 
+                    avgRecommendedBid < avgHistoricalBid ? '#dc3545' : '#333';
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; color: ' + recommendColor + ';">$' + 
+                    avgRecommendedBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                
+                // Winning Bidders (convert Set to array and join)
+                const winningBiddersArray = Array.from(clientData.winning_bidders);
+                const winningBiddersText = winningBiddersArray.length > 0 ? winningBiddersArray.join(', ') : 'N/A';
+                const biddersColor = winningBiddersArray.includes('Us') ? '#28a745' : '#dc3545';
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-size: 11px; color: ' + biddersColor + ';">' + 
+                    winningBiddersText + '</td>';
+                
+                // AI Accuracy
+                const accuracyColor = aiAccuracy >= 70 ? '#28a745' : aiAccuracy >= 50 ? '#ffc107' : '#dc3545';
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + accuracyColor + ';">' + 
+                    aiAccuracy.toFixed(1) + '%</td>';
+                
+                // Opportunity Analysis
+                let opportunity = '';
+                const bidDifference = avgRecommendedBid - avgHistoricalBid;
+                const bidDiffPercent = avgHistoricalBid > 0 ? (bidDifference / avgHistoricalBid * 100) : 0;
+                
+                if (winRate < 30 && aiAccuracy > 60) {
+                    opportunity = '🎯 High Potential';
+                } else if (winRate > 70 && bidDiffPercent > 5) {
+                    opportunity = '💰 Margin Opportunity';
+                } else if (aiAccuracy < 50) {
+                    opportunity = '⚠️ Needs Analysis';
                 } else {
-                    // No winning price data available
-                    winningPriceDisplay = 'Unknown';
-                }
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + winningPriceDisplay + '</td>';
-                
-                // AI Recommendation
-                const recommendedPrice = result.recommended_price || result.historical_bid || 0;
-                const bidColor = recommendedPrice > result.historical_bid ? '#28a745' : '#dc3545';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + bidColor + ';">$' + recommendedPrice.toLocaleString() + '</td>';
-                
-                // AI Prediction
-                const predictionColor = predictedWin ? '#28a745' : '#dc3545';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + predictionColor + ';">' + (predictedWin ? 'Win' : 'Loss') + '</td>';
-                
-                // Win Probability
-                const winProb = (result.win_probability || 0) * 100;
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + winProb.toFixed(1) + '%</td>';
-                
-                // Actual Outcome
-                const outcomeColor = actualWin ? '#28a745' : '#dc3545';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + outcomeColor + ';">' + (actualWin ? 'Won' : 'Lost') + '</td>';
-                
-                // Analysis - Improved logic considering competitive landscape
-                let analysis = '';
-                const ourBid = result.historical_bid || 0;
-                const aiRecommendation = recommendedPrice;
-                const aiWouldWin = winningPrice > 0 ? aiRecommendation <= winningPrice : (aiRecommendation <= ourBid * 1.05);
-                
-                if (actualWin && predictedWin) {
-                    // We won and AI predicted win
-                    if (aiRecommendation > ourBid * 1.05) {
-                        analysis = '💰 Margin Opportunity';  // AI found we could bid higher
-                    } else {
-                        analysis = '✅ Correct Win Prediction';
-                    }
-                } else if (!actualWin && !predictedWin) {
-                    analysis = '✅ Correct Loss Prediction';
-                } else if (actualWin && !predictedWin) {
-                    // We won but AI predicted loss
-                    if (aiWouldWin) {
-                        analysis = '🎯 AI Would Have Won';  // AI was actually right, just conservative
-                    } else {
-                        analysis = '❌ Missed Win Opportunity';
-                    }
-                } else {
-                    // We lost but AI predicted win
-                    if (aiWouldWin) {
-                        analysis = '🔍 AI Right, We Underbid';  // AI was correct, we were too conservative
-                    } else {
-                        analysis = '❌ AI Overestimated';
-                    }
-                }
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: 500; font-size: 11px;">' + analysis + '</td>';
-                
-                // Impact Analysis - Enhanced with competitive analysis
-                let impact = '';
-                
-                if (actualWin && predictedWin) {
-                    // We won and AI predicted win
-                    if (aiRecommendation > ourBid * 1.05) {
-                        const marginOpportunity = aiRecommendation - ourBid;
-                        impact = `Margin opportunity: AI suggests +$${marginOpportunity.toLocaleString()} while still winning.`;
-                    } else {
-                        impact = `AI confirms our pricing was competitive and appropriate.`;
-                    }
-                } else if (actualWin && !predictedWin) {
-                    // We won but AI predicted loss
-                    if (aiWouldWin) {
-                        const aiAdvantage = ourBid - aiRecommendation;
-                        impact = `AI's lower bid ($${aiRecommendation.toLocaleString()}) would have won with $${aiAdvantage.toLocaleString()} better margin.`;
-                    } else {
-                        impact = `We won at $${ourBid.toLocaleString()}. AI was overly conservative at $${aiRecommendation.toLocaleString()}.`;
-                    }
-                } else if (!actualWin && predictedWin) {
-                    // We lost but AI predicted win
-                    if (aiWouldWin && winningPrice > 0) {
-                        impact = `AI was right! At $${aiRecommendation.toLocaleString()} we'd beat winner's $${winningPrice.toLocaleString()}.`;
-                    } else if (winningPrice > 0) {
-                        impact = `We lost at $${ourBid.toLocaleString()}. Winner: $${winningPrice.toLocaleString()}. AI overestimated.`;
-                    } else {
-                        impact = `We lost. AI prediction was too optimistic.`;
-                    }
-                } else {
-                    // We lost and AI predicted loss
-                    if (winningPrice > 0) {
-                        const competitiveGap = winningPrice - aiRecommendation;
-                        if (competitiveGap > 0) {
-                            impact = `Lost as expected. Winner bid $${winningPrice.toLocaleString()}, AI was $${competitiveGap.toLocaleString()} below.`;
-                        } else {
-                            impact = `Lost as expected. AI pricing was competitive vs winner's $${winningPrice.toLocaleString()}.`;
-                        }
-                    } else {
-                        impact = `Both we and AI correctly identified this as unwinnable.`;
-                    }
+                    opportunity = '✅ Optimized';
                 }
                 
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-size: 12px;">' + impact + '</td>';
+                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: 500; font-size: 11px;">' + 
+                    opportunity + '</td>';
                 
                 detailHtml += '</tr>';
                 
                 } catch (error) {
-                    console.error('Error processing validation result', index, ':', error, result);
+                    console.error('Error processing client group', clientId, ':', error, clientGroup);
                     // Skip this row and continue
                 }
             });

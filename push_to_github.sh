@@ -12,23 +12,46 @@ if [ ! -d .git ]; then
     exit 1
 fi
 
-echo "📝 Follow these steps to push your code to GitHub:"
-echo ""
-echo "1️⃣  Create a new repository on GitHub:"
-echo "   - Go to https://github.com/new"
-echo "   - Name it: ai-bid-optimization"
-echo "   - Make it Private (recommended) or Public"
-echo "   - Don't initialize with README (we already have one)"
-echo ""
-echo "2️⃣  After creating the repo, GitHub will show you commands."
-echo "   Copy the repository URL (looks like: https://github.com/yourusername/ai-bid-optimization.git)"
-echo ""
-read -p "3️⃣  Enter your GitHub repository URL: " repo_url
+# Pre-configured GitHub repository details
+repo_url="https://github.com/KnKasibhatla/ai-proposal-optimization.git"
 
-if [ -z "$repo_url" ]; then
-    echo "❌ No URL provided. Exiting."
+# Get token from environment variable or prompt user
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo "⚠️  GITHUB_TOKEN environment variable not set."
+    echo ""
+    read -s -p "🔑 Enter your GitHub Personal Access Token: " github_token
+    echo ""
+else
+    github_token="$GITHUB_TOKEN"
+fi
+
+if [ -z "$github_token" ]; then
+    echo "❌ No token provided. Cannot proceed."
     exit 1
 fi
+
+echo "📝 Checking if GitHub repository exists..."
+
+# Check if repository exists
+if ! curl -s -H "Authorization: token $github_token" https://api.github.com/repos/KnKasibhatla/ai-proposal-optimization | grep -q '"name"'; then
+    echo ""
+    echo "❌ Repository doesn't exist yet!"
+    echo ""
+    echo "🔧 Please create the repository first:"
+    echo "   1. Go to: https://github.com/new"
+    echo "   2. Repository name: AIProposalPricing"
+    echo "   3. Description: AI-powered bid optimization platform"
+    echo "   4. Make it Public or Private (your choice)"
+    echo "   5. ❗ DO NOT initialize with README, .gitignore, or license"
+    echo "   6. Click 'Create repository'"
+    echo ""
+    echo "Then run this script again: ./push_to_github.sh"
+    exit 1
+fi
+
+echo "✅ Repository exists! Proceeding with push..."
+echo "   Repository: $repo_url"
+echo ""
 
 echo ""
 echo "🔗 Adding remote repository..."
@@ -40,27 +63,26 @@ git remote add origin "$repo_url" 2>/dev/null || {
 echo "📤 Pushing code to GitHub..."
 echo ""
 
+# Configure Git credential helper for token authentication
+git config credential.helper store
+echo "https://KnKasibhatla:$github_token@github.com" > ~/.git-credentials
+
 # Push to main branch
+echo "🔐 Authenticating with GitHub token..."
 git push -u origin main 2>/dev/null || {
     # If main doesn't work, try master
     echo "Trying branch 'master'..."
     git branch -M main
     git push -u origin main 2>/dev/null || {
-        echo "❌ Push failed. You may need to authenticate."
+        echo "❌ Push failed. Please check your token and repository access."
         echo ""
-        echo "🔐 If you see an authentication error:"
-        echo "   1. Make sure you're logged into GitHub"
-        echo "   2. For HTTPS: Use a Personal Access Token (not password)"
-        echo "      - Go to GitHub Settings > Developer Settings > Personal Access Tokens"
-        echo "      - Generate a new token with 'repo' scope"
-        echo "      - Use the token as your password"
+        echo "🔐 Token troubleshooting:"
+        echo "   1. Verify your token has 'repo' scope"
+        echo "   2. Check if repository exists at: $repo_url"
+        echo "   3. Ensure token is not expired"
         echo ""
-        echo "   3. For SSH: Set up SSH keys"
-        echo "      - Run: ssh-keygen -t ed25519 -C 'your_email@example.com'"
-        echo "      - Add the public key to GitHub Settings > SSH Keys"
-        echo "      - Change remote to SSH: git remote set-url origin git@github.com:username/repo.git"
-        echo ""
-        echo "📝 Then run: git push -u origin main"
+        # Clean up credentials on failure
+        rm -f ~/.git-credentials
         exit 1
     }
 }
@@ -68,8 +90,11 @@ git push -u origin main 2>/dev/null || {
 echo ""
 echo "✅ Successfully pushed to GitHub!"
 echo ""
+# Clean up credentials after successful push
+rm -f ~/.git-credentials
+
 echo "🎉 Your code is now backed up on GitHub at:"
-echo "   $repo_url"
+echo "   https://github.com/KnKasibhatla/ai-proposal-optimization"
 echo ""
 echo "📋 Useful Git commands:"
 echo "   git status           - Check what's changed"

@@ -2895,6 +2895,14 @@ def api_get_clients():
 @app.route('/api/predict-pricing', methods=['POST', 'OPTIONS'])
 def api_predict_pricing():
     """FIXED: Advanced pricing prediction with dynamic results"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
     try:
         global current_data
         

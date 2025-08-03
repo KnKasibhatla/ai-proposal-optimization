@@ -2529,7 +2529,7 @@
             
             try {
                 // Fetch real validation data from API
-                const response = await fetch('/api/historical/enhanced-validate', {
+                const response = await fetch(`${API_BASE_URL}/api/historical/enhanced-validate`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({analysis_type: 'all'})
@@ -2827,7 +2827,7 @@
             
             try {
                 // Fetch validation data to calculate performance metrics
-                const response = await fetch('/api/historical/enhanced-validate', {
+                const response = await fetch(`${API_BASE_URL}/api/historical/enhanced-validate`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({analysis_type: 'all'})
@@ -3078,7 +3078,7 @@
             
             try {
                 // Fetch real competitive analysis data
-                const response = await fetch('/api/competitive/analysis', {
+                const response = await fetch(`${API_BASE_URL}/api/competitive/analysis`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -3217,7 +3217,7 @@
                 // Simulate comprehensive training analysis
                 setTimeout(async function() {
                     // Check if historical data is available first
-                    const dataCheckResponse = await fetch('/api/historical/enhanced-validate', {
+                    const dataCheckResponse = await fetch(`${API_BASE_URL}/api/historical/enhanced-validate`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({analysis_type: 'all'})
@@ -3270,7 +3270,7 @@
         // Update Quick Metrics - DYNAMIC API-BASED
         async function updateQuickMetrics() {
             try {
-                const response = await fetch('/api/model/quick-metrics', {
+                const response = await fetch(`${API_BASE_URL}/api/model/quick-metrics`, {
                     method: 'GET',
                     headers: {'Content-Type': 'application/json'}
                 });
@@ -3318,7 +3318,7 @@
                 
                 // Clear canvas
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const response = await fetch('/api/model/accuracy-trend', {
+                const response = await fetch(`${API_BASE_URL}/api/model/accuracy-trend`, {
                     method: 'GET',
                     headers: {'Content-Type': 'application/json'}
                 });
@@ -3689,7 +3689,7 @@
         // Generate Retraining Recommendations - DYNAMIC API-BASED
         async function generateRetrainingRecommendations() {
             try {
-                const response = await fetch('/api/model/retraining-analysis', {
+                const response = await fetch(`${API_BASE_URL}/api/model/retraining-analysis`, {
                     method: 'GET',
                     headers: {'Content-Type': 'application/json'}
                 });
@@ -3983,7 +3983,7 @@
         // Continuous Learning Functions
         async function loadLearningMetrics() {
             try {
-                const response = await fetch('/api/model/learning-metrics');
+                const response = await fetch(`${API_BASE_URL}/api/model/learning-metrics`);
                 if (!response.ok) {
                     throw new Error('Failed to load learning metrics');
                 }
@@ -4047,7 +4047,7 @@
                 loading.style.display = 'inline-block';
                 resultsDiv.classList.add('hidden');
                 
-                const response = await fetch('/api/model/self-train', {
+                const response = await fetch(`${API_BASE_URL}/api/model/self-train`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -4125,7 +4125,7 @@
                 loading.style.display = 'inline-block';
                 resultsDiv.classList.add('hidden');
                 
-                const response = await fetch('/api/model/continuous-improve', {
+                const response = await fetch(`${API_BASE_URL}/api/model/continuous-improve`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

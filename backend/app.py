@@ -2475,6 +2475,12 @@ def api_enhanced_historical_validation():
     try:
         global current_data
         
+        # Add debugging
+        print(f"Enhanced validate: current_data type: {type(current_data)}")
+        print(f"Enhanced validate: current_data is None: {current_data is None}")
+        if current_data is not None:
+            print(f"Enhanced validate: current_data length: {len(current_data)}")
+        
         if current_data is None or len(current_data) == 0:
             return jsonify({
                 'status': 'no_data',
@@ -2515,7 +2521,12 @@ def api_enhanced_historical_validation():
         won_bids_with_margin_opportunity = 0
         lost_bids_with_better_pricing = 0
         
-        for idx, bid in client_data.iterrows():
+        # Limit processing to prevent timeouts
+        max_records = 100
+        processing_data = client_data.head(max_records) if len(client_data) > max_records else client_data
+        print(f"Enhanced validate: Processing {len(processing_data)} records (limited from {len(client_data)})")
+        
+        for idx, bid in processing_data.iterrows():
             # Create prediction request
             input_data = {
                 'price': float(bid['bid_amount']),

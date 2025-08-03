@@ -699,7 +699,7 @@
             <div class="alert alert-info">
                 <h4>🎯 Training Analysis Overview</h4>
                 <p>Analyze historical vs predicted values, identify model weaknesses, and optimize for better outcomes.</p>
-                <p><strong>Analysis includes:</strong> Prediction accuracy trends, error patterns, feature performance, and retraining recommendations.</p>
+                <p><strong>Analysis includes:</strong> Error patterns, feature performance, and retraining recommendations.</p>
             </div>
             
             <div class="grid grid-2">
@@ -763,15 +763,6 @@
             </div>
             
             <div id="training-analysis-results" class="hidden">
-                <!-- Accuracy Trend Chart -->
-                <div class="card">
-                    <h3>📈 Prediction Accuracy Over Time</h3>
-                    <div id="accuracy-trend-chart" style="height: 300px; background: #f8f9fa; border-radius: 8px; position: relative;">
-                        <canvas id="accuracy-chart-canvas" width="800" height="300"></canvas>
-                    </div>
-                    <div id="accuracy-insights" class="alert alert-info" style="margin-top: 15px;"></div>
-                </div>
-                
                 <!-- Error Analysis Chart -->
                 <div class="card">
                     <h3>🎯 Prediction Error Analysis</h3>
@@ -1082,7 +1073,6 @@
                 updateQuickMetrics();
                 // Ensure charts are drawn when panel becomes visible
                 setTimeout(function() {
-                    generateAccuracyTrendChart();
                     generateErrorAnalysisCharts();
                     generateModelPerformanceChart();
                     generateFeatureDriftChart();
@@ -3233,7 +3223,6 @@
                     // Only generate charts if data is available
                     if (hasData) {
                         // Generate charts
-                        generateAccuracyTrendChart();
                         generateErrorAnalysisCharts();
                         generateModelPerformanceChart();
                         generateFeatureDriftChart();
@@ -3250,7 +3239,7 @@
                         noDataMessage.innerHTML = `
                             <h4>📊 Training Analysis</h4>
                             <p>Training analysis charts require historical data to be uploaded first.</p>
-                            <p>Upload your bidding history using the Data Upload tab to see prediction accuracy trends over time.</p>
+                            <p>Upload your bidding history using the Data Upload tab to see error analysis and model performance charts.</p>
                         `;
                         analysisResults.appendChild(noDataMessage);
                     }
@@ -3297,161 +3286,6 @@
             }
         }
         
-        // Generate Accuracy Trend Chart - DYNAMIC API-BASED
-        async function generateAccuracyTrendChart() {
-            try {
-                const canvas = document.getElementById('accuracy-chart-canvas');
-                if (!canvas) {
-                    console.error('Canvas element not found');
-                    return;
-                }
-                
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    console.error('Could not get canvas context');
-                    return;
-                }
-                
-                // Set canvas size explicitly
-                canvas.width = 800;
-                canvas.height = 300;
-                
-                // Clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const response = await fetch(`${API_BASE_URL}/api/model/accuracy-trend`, {
-                    method: 'GET',
-                    headers: {'Content-Type': 'application/json'}
-                });
-                
-                let accuracyData = [];
-                if (response.ok) {
-                    const trendData = await response.json();
-                    accuracyData = trendData.accuracy_history || [];
-                } else {
-                    // Show error message on chart
-                    ctx.fillStyle = '#666';
-                    ctx.font = '16px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Accuracy trend data unavailable', canvas.width/2, canvas.height/2);
-                    ctx.fillText('Upload historical data to enable trend analysis', canvas.width/2, canvas.height/2 + 25);
-                    return;
-                }
-                
-                if (accuracyData.length === 0) {
-                    // Show no data message
-                    ctx.fillStyle = '#666';
-                    ctx.font = '16px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('No accuracy trend data available', canvas.width/2, canvas.height/2);
-                    ctx.fillText('Make predictions to generate trend data', canvas.width/2, canvas.height/2 + 25);
-                    return;
-                }
-                
-                // Chart dimensions
-                const padding = 60;
-                const chartWidth = canvas.width - 2 * padding;
-                const chartHeight = canvas.height - 2 * padding;
-                
-                // Find min/max accuracy for scaling
-                const accuracies = accuracyData.map(d => d.accuracy);
-                const minAccuracy = Math.min(...accuracies);
-                const maxAccuracy = Math.max(...accuracies);
-                const accuracyRange = maxAccuracy - minAccuracy;
-                const chartMinAccuracy = Math.max(0, minAccuracy - accuracyRange * 0.1);
-                const chartMaxAccuracy = Math.min(1, maxAccuracy + accuracyRange * 0.1);
-                
-                // Draw axes
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(padding, padding);
-                ctx.lineTo(padding, canvas.height - padding);
-                ctx.lineTo(canvas.width - padding, canvas.height - padding);
-                ctx.stroke();
-                
-                // Draw accuracy line
-                ctx.strokeStyle = minAccuracy < maxAccuracy && accuracyData[accuracyData.length-1].accuracy < accuracyData[0].accuracy ? '#dc3545' : '#28a745';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                
-                accuracyData.forEach(function(point, index) {
-                    const x = padding + (index / (accuracyData.length - 1)) * chartWidth;
-                    const y = canvas.height - padding - ((point.accuracy - chartMinAccuracy) / (chartMaxAccuracy - chartMinAccuracy)) * chartHeight;
-                    
-                    if (index === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                    
-                    // Draw data points
-                    ctx.fillStyle = ctx.strokeStyle;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
-                    ctx.fill();
-                });
-                ctx.stroke();
-                
-                // Add labels
-                ctx.fillStyle = '#333';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                
-                // Y-axis labels
-                for (let i = 0; i <= 4; i++) {
-                    const accuracy = chartMinAccuracy + (chartMaxAccuracy - chartMinAccuracy) * (i / 4);
-                    const y = canvas.height - padding - (i / 4) * chartHeight;
-                    ctx.fillText((accuracy * 100).toFixed(0) + '%', padding - 20, y + 4);
-                }
-                
-                // X-axis labels (show first, middle, last dates)
-                if (accuracyData.length > 0) {
-                    const firstDate = new Date(accuracyData[0].date).toLocaleDateString();
-                    const lastDate = new Date(accuracyData[accuracyData.length-1].date).toLocaleDateString();
-                    
-                    ctx.fillText(firstDate, padding, canvas.height - padding + 20);
-                    ctx.fillText(lastDate, canvas.width - padding, canvas.height - padding + 20);
-                    
-                    if (accuracyData.length > 2) {
-                        const midIndex = Math.floor(accuracyData.length / 2);
-                        const midDate = new Date(accuracyData[midIndex].date).toLocaleDateString();
-                        ctx.fillText(midDate, canvas.width / 2, canvas.height - padding + 20);
-                    }
-                }
-                
-                // Add title
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                const trendDirection = accuracyData.length > 1 && accuracyData[accuracyData.length-1].accuracy < accuracyData[0].accuracy ? 'Declining' : 'Stable/Improving';
-                ctx.fillText('Model Accuracy Trend - ' + trendDirection, canvas.width / 2, 30);
-                
-                // Update insights with real data
-                const currentAccuracy = accuracyData[accuracyData.length-1].accuracy;
-                const baselineAccuracy = accuracyData[0].accuracy;
-                const accuracyChange = currentAccuracy - baselineAccuracy;
-                
-                document.getElementById('accuracy-insights').innerHTML = 
-                    '<h4>📉 Accuracy Trend Analysis</h4>' +
-                    '<p><strong>Current Accuracy:</strong> ' + (currentAccuracy * 100).toFixed(1) + '% (baseline: ' + (baselineAccuracy * 100).toFixed(1) + '%)</p>' +
-                    '<p><strong>Change:</strong> ' + (accuracyChange >= 0 ? '+' : '') + (accuracyChange * 100).toFixed(1) + '% from baseline</p>' +
-                    '<p><strong>Trend:</strong> ' + (accuracyChange < -0.05 ? 'Concerning decline' : accuracyChange > 0.05 ? 'Positive improvement' : 'Stable performance') + '</p>' +
-                    '<p><strong>Recommendation:</strong> ' + (accuracyChange < -0.1 ? 'Immediate retraining recommended' : accuracyChange < -0.05 ? 'Monitor closely, consider retraining' : 'Performance is acceptable') + '</p>';
-                
-            } catch (error) {
-                console.error('Main chart generation error:', error);
-                // Fallback - show error message
-                const canvas = document.getElementById('accuracy-chart-canvas');
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        ctx.fillStyle = '#dc3545';
-                        ctx.font = '16px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('Chart generation failed', canvas.width/2, canvas.height/2);
-                    }
-                }
-            }
-        }
         
         // Generate Error Analysis Charts
         function generateErrorAnalysisCharts() {

@@ -2803,9 +2803,17 @@ def api_health():
         'ai_engine_trained': ai_engine.trained
     })
 
-@app.route('/api/clients', methods=['GET'])
+@app.route('/api/clients', methods=['GET', 'OPTIONS'])
 def api_get_clients():
     """Get list of available clients with enhanced details"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        return response
+    
     try:
         global current_data
         
@@ -2996,9 +3004,17 @@ def api_predict_pricing():
         print(f"❌ FIXED prediction error: {str(e)}")
         return jsonify({'error': f'Prediction error: {str(e)}'}), 500
 
-@app.route('/api/feature-importance', methods=['GET'])
+@app.route('/api/feature-importance', methods=['GET', 'OPTIONS'])
 def api_feature_importance():
     """Get feature importance ranking"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        return response
+    
     try:
         global ai_engine
         
@@ -3336,9 +3352,17 @@ def api_competitor_analysis():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/stats', methods=['GET'])
+@app.route('/api/stats', methods=['GET', 'OPTIONS'])
 def api_stats():
     """Get dashboard statistics"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        return response
+    
     try:
         global current_data
         

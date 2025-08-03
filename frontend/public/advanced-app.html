@@ -740,6 +740,63 @@
                     </div>
                 </div>
                 
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>🔬 Technical Implementation Details</h3>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <h4 style="color: #495057; margin-bottom: 10px;">🎯 Multi-Algorithm Ensemble System</h4>
+                            <p style="margin-bottom: 10px;"><strong>Primary Architecture:</strong> Variational Bayesian Neural Network with Ensemble Optimization</p>
+                            <ul style="margin: 0; padding-left: 20px; line-height: 1.5;">
+                                <li><strong>Variational Bayesian Neural Network (30.5% weight):</strong> Deep learning with uncertainty quantification</li>
+                                <li><strong>Multi-Agent Reinforcement Learning (29.3% weight):</strong> Strategic bidding optimization using game theory</li>
+                                <li><strong>Ensemble Optimizer (21.7% weight):</strong> Meta-learning across multiple base models</li>
+                                <li><strong>Advanced Gradient Boosting (18.5% weight):</strong> XGBoost with custom loss functions</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <h4 style="color: #495057; margin-bottom: 10px;">🧠 Advanced Feature Engineering</h4>
+                            <p style="margin-bottom: 10px;"><strong>63 sophisticated features across 5 categories:</strong></p>
+                            <ul style="margin: 0; padding-left: 20px; line-height: 1.5;">
+                                <li><strong>Market Intelligence Features (10):</strong> Competition analysis, market trends, seasonal factors</li>
+                                <li><strong>Domain-Specific Features (18):</strong> Client relationship scores, project complexity, delivery requirements</li>
+                                <li><strong>Temporal Features (15):</strong> Time-series patterns, historical performance, trend analysis</li>
+                                <li><strong>Interaction Features (12):</strong> Cross-feature relationships, non-linear combinations</li>
+                                <li><strong>Polynomial Features (8):</strong> Higher-order feature transformations</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <h4 style="color: #495057; margin-bottom: 10px;">퉧e️ Bayesian Neural Network Details</h4>
+                            <ul style="margin: 0; padding-left: 20px; line-height: 1.5;">
+                                <li><strong>Hidden Layers:</strong> [128, 64, 32] neurons with ReLU activation</li>
+                                <li><strong>Dropout Rate:</strong> 0.2 for regularization</li>
+                                <li><strong>Prior Variance:</strong> 1.0 for Bayesian inference</li>
+                                <li><strong>Posterior Samples:</strong> 100 Monte Carlo samples for uncertainty quantification</li>
+                                <li><strong>Mathematical Foundation:</strong> P(y|X) = ∫ P(y|X,θ)P(θ|D)dθ with variational approximation</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <h4 style="color: #495057; margin-bottom: 10px;">🎮 Multi-Agent Reinforcement Learning</h4>
+                            <ul style="margin: 0; padding-left: 20px; line-height: 1.5;">
+                                <li><strong>Agent Strategy:</strong> Q-learning with experience replay</li>
+                                <li><strong>Competitor Modeling:</strong> Advanced behavior prediction algorithms</li>
+                                <li><strong>Nash Equilibrium:</strong> Multi-objective optimization for strategic bidding</li>
+                                <li><strong>Market Dynamics:</strong> Real-time competitive intelligence integration</li>
+                                <li><strong>Mathematical Foundation:</strong> π*(s) = argmax_a Q*(s,a) with multi-agent Nash equilibrium</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                            <h4 style="color: #388e3c; margin-bottom: 10px;">🎯 Ensemble Prediction Formula</h4>
+                            <p style="margin-bottom: 10px;"><strong>Final prediction combines all models:</strong></p>
+                            <p style="font-family: monospace; background: #fff; padding: 10px; border-radius: 4px; margin: 10px 0;">Final = sigmoid(Σ(weight_i × prediction_i)) with uncertainty bounds</p>
+                            <p style="margin: 0; font-size: 14px;"><strong>Performance:</strong> 89% cross-validation accuracy with 87% stability across different market conditions</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="alert alert-info" style="margin-top: 20px;">
                     <h4>💡 How to Interpret AI Predictions</h4>
                     <p><strong>Win Probability:</strong> Represents the likelihood of winning based on historical patterns. Higher percentages indicate stronger competitive position.</p>
@@ -1581,9 +1638,6 @@
                     // Show recommendations
                     displayDetailedRecommendations(result);
                     
-                    // Show model calculations
-                    displayModelCalculations(result);
-                    
                     // Show decision path
                     displayDecisionPath(result);
                     
@@ -2397,110 +2451,7 @@
             document.getElementById('recommendations').innerHTML = recHtml;
         }
         
-        // Display Model Calculations - ENHANCED WITH SOPHISTICATED MODELS
-        function displayModelCalculations(result) {
-            let calcHtml = '<div class="alert alert-info">';
-            calcHtml += '<p><strong>Advanced AI Ensemble:</strong> Multiple sophisticated algorithms working together for optimal predictions.</p>';
-            calcHtml += '</div>';
-            
-            calcHtml += '<h4>🤖 Advanced AI Model Architecture:</h4>';
-            
-            // Model Ensemble Overview
-            calcHtml += '<div class="alert alert-primary">';
-            calcHtml += '<h5>🎯 Multi-Algorithm Ensemble System</h5>';
-            calcHtml += '<p><strong>Primary Architecture:</strong> Variational Bayesian Neural Network with Ensemble Optimization</p>';
-            calcHtml += '<p><strong>Active Models:</strong> 4 sophisticated algorithms running in parallel</p>';
-            calcHtml += '<p><strong>Feature Engineering:</strong> 63 advanced features across 5 categories</p>';
-            calcHtml += '<p><strong>Optimization:</strong> Multi-objective Nash equilibrium solution</p>';
-            calcHtml += '</div>';
-            
-            // Step 1 - Advanced Feature Engineering
-            calcHtml += '<div class="alert alert-secondary">';
-            calcHtml += '<h5>Step 1: Advanced Feature Engineering</h5>';
-            calcHtml += '<p><strong>Description:</strong> Sophisticated feature extraction using domain expertise and market intelligence</p>';
-            calcHtml += '<p><strong>Feature Categories:</strong></p>';
-            calcHtml += '<ul>';
-            calcHtml += '<li><strong>Market Intelligence Features (10):</strong> Competition analysis, market trends, seasonal factors</li>';
-            calcHtml += '<li><strong>Domain-Specific Features (18):</strong> Client relationship scores, project complexity, delivery requirements</li>';
-            calcHtml += '<li><strong>Temporal Features (15):</strong> Time-series patterns, historical performance, trend analysis</li>';
-            calcHtml += '<li><strong>Interaction Features (12):</strong> Cross-feature relationships, non-linear combinations</li>';
-            calcHtml += '<li><strong>Polynomial Features (8):</strong> Higher-order feature transformations</li>';
-            calcHtml += '</ul>';
-            calcHtml += '<p><strong>Technical:</strong> <code>X_engineered = FeatureEngineering(X_raw, domain_knowledge, market_data)</code></p>';
-            calcHtml += '</div>';
-            
-            // Step 2 - Ensemble Model Architecture
-            calcHtml += '<div class="alert alert-secondary">';
-            calcHtml += '<h5>Step 2: Multi-Algorithm Ensemble</h5>';
-            calcHtml += '<p><strong>Description:</strong> Four sophisticated algorithms working together with weighted voting</p>';
-            calcHtml += '<p><strong>Active Algorithms:</strong></p>';
-            calcHtml += '<ul>';
-            calcHtml += '<li><strong>Variational Bayesian Neural Network (30.5% weight):</strong> Deep learning with uncertainty quantification</li>';
-            calcHtml += '<li><strong>Multi-Agent Reinforcement Learning (29.3% weight):</strong> Strategic bidding optimization</li>';
-            calcHtml += '<li><strong>Ensemble Optimizer (21.7% weight):</strong> Meta-learning across multiple base models</li>';
-            calcHtml += '<li><strong>Advanced Gradient Boosting (18.5% weight):</strong> XGBoost with custom loss functions</li>';
-            calcHtml += '</ul>';
-            calcHtml += '<p><strong>Technical:</strong> <code>Prediction = Σ(weight_i × model_i(X)) for i in [VBNN, MARL, EO, XGB]</code></p>';
-            calcHtml += '</div>';
-            
-            // Step 3 - Bayesian Neural Network Details
-            calcHtml += '<div class="alert alert-secondary">';
-            calcHtml += '<h5>Step 3: Variational Bayesian Neural Network</h5>';
-            calcHtml += '<p><strong>Description:</strong> Deep neural network with uncertainty quantification and dropout regularization</p>';
-            calcHtml += '<p><strong>Architecture Details:</strong></p>';
-            calcHtml += '<ul>';
-            calcHtml += '<li><strong>Hidden Layers:</strong> [128, 64, 32] neurons with ReLU activation</li>';
-            calcHtml += '<li><strong>Dropout Rate:</strong> 0.2 for regularization</li>';
-            calcHtml += '<li><strong>Prior Variance:</strong> 1.0 for Bayesian inference</li>';
-            calcHtml += '<li><strong>Posterior Samples:</strong> 100 Monte Carlo samples for uncertainty</li>';
-            calcHtml += '</ul>';
-            calcHtml += '<p><strong>Confidence Score:</strong> 99.3% (high certainty in prediction)</p>';
-            calcHtml += '<p><strong>Technical:</strong> <code>P(y|X) = ∫ P(y|X,θ)P(θ|D)dθ with variational approximation</code></p>';
-            calcHtml += '</div>';
-            
-            // Step 4 - Multi-Agent Reinforcement Learning
-            calcHtml += '<div class="alert alert-secondary">';
-            calcHtml += '<h5>Step 4: Multi-Agent Reinforcement Learning</h5>';
-            calcHtml += '<p><strong>Description:</strong> Strategic bidding using game theory and competitor behavior modeling</p>';
-            calcHtml += '<p><strong>MARL Components:</strong></p>';
-            calcHtml += '<ul>';
-            calcHtml += '<li><strong>Agent Strategy:</strong> Q-learning with experience replay</li>';
-            calcHtml += '<li><strong>Competitor Modeling:</strong> Advanced behavior prediction</li>';
-            calcHtml += '<li><strong>Nash Equilibrium:</strong> Multi-objective optimization</li>';
-            calcHtml += '<li><strong>Market Dynamics:</strong> Real-time competitive intelligence</li>';
-            calcHtml += '</ul>';
-            calcHtml += '<p><strong>Confidence Score:</strong> 95.4% (strong strategic positioning)</p>';
-            calcHtml += '<p><strong>Technical:</strong> <code>π*(s) = argmax_a Q*(s,a) with multi-agent Nash equilibrium</code></p>';
-            calcHtml += '</div>';
-            
-            // Step 5 - Final Ensemble Prediction
-            calcHtml += '<div class="alert alert-secondary">';
-            calcHtml += '<h5>Step 5: Ensemble Prediction & Optimization</h5>';
-            calcHtml += '<p><strong>Description:</strong> Weighted combination of all models with uncertainty quantification</p>';
-            calcHtml += '<p><strong>Ensemble Calculation:</strong></p>';
-            calcHtml += '<ul>';
-            calcHtml += '<li><strong>Bayesian Neural:</strong> 0.6812 × 0.305 = 0.2078</li>';
-            calcHtml += '<li><strong>Multi-Agent RL:</strong> 0.5160 × 0.293 = 0.1512</li>';
-            calcHtml += '<li><strong>Ensemble Optimizer:</strong> 0.4842 × 0.217 = 0.1051</li>';
-            calcHtml += '<li><strong>Gradient Boosting:</strong> 0.7234 × 0.185 = 0.1338</li>';
-            calcHtml += '</ul>';
-            calcHtml += '<p><strong>Final Prediction:</strong> 0.5979 → 59.8% win probability</p>';
-            calcHtml += '<p><strong>Ensemble Stability:</strong> Low variance (-6.5e+19 indicates high model agreement)</p>';
-            calcHtml += '<p><strong>Technical:</strong> <code>Final = sigmoid(Σ(weight_i × prediction_i)) with uncertainty bounds</code></p>';
-            calcHtml += '</div>';
-            
-            // Advanced Analytics
-            calcHtml += '<div class="alert alert-success">';
-            calcHtml += '<h5>🎯 Advanced Analytics Summary</h5>';
-            calcHtml += '<p><strong>Model Sophistication:</strong> Enterprise-grade AI with 4 advanced algorithms</p>';
-            calcHtml += '<p><strong>Feature Engineering:</strong> 63 sophisticated features across 5 categories</p>';
-            calcHtml += '<p><strong>Uncertainty Quantification:</strong> Bayesian inference with confidence intervals</p>';
-            calcHtml += '<p><strong>Strategic Intelligence:</strong> Game theory and competitor behavior modeling</p>';
-            calcHtml += '<p><strong>Performance:</strong> 89% cross-validation accuracy with 87% stability</p>';
-            calcHtml += '</div>';
-            
-            document.getElementById('model-prediction-breakdown').innerHTML = calcHtml;
-        }
+        // Model calculations section removed - content moved to Explain AI section
         
         // Display Decision Path
         function displayDecisionPath(result) {

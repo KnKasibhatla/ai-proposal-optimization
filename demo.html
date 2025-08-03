@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 AI Proposal Optimization - Static Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .content-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 15px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .content-panel.active {
+            display: block;
+        }
+        
+        .prediction-card {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .metric {
+            display: inline-block;
+            margin: 10px 20px;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .demo-table th,
+        .demo-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .demo-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .status-win {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-loss {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI Proposal Optimization Platform</h1>
+            <p>Static Demo - Experience the features with sample data</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showPanel('smart-pricing')">🎯 Smart Pricing</button>
+            <button class="nav-tab" onclick="showPanel('continuous-learning')">📈 Continuous Learning</button>
+            <button class="nav-tab" onclick="showPanel('validation')">✅ Model Validation</button>
+            <button class="nav-tab" onclick="showPanel('upload')">📁 Upload Data</button>
+        </div>
+        
+        <!-- Smart Pricing Panel -->
+        <div id="smart-pricing" class="content-panel active">
+            <h2>🎯 Smart Pricing Predictions</h2>
+            <div class="prediction-card">
+                <h3>Prediction Results for Sample Project</h3>
+                <div class="metric">
+                    <span class="metric-value">67%</span>
+                    <span>Win Probability</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">$125,450</span>
+                    <span>Recommended Bid</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">$18,200</span>
+                    <span>Expected Margin</span>
+                </div>
+            </div>
+            
+            <h3>🔍 Prediction Analysis</h3>
+            <table class="demo-table">
+                <tr>
+                    <th>Factor</th>
+                    <th>Impact</th>
+                    <th>Recommendation</th>
+                </tr>
+                <tr>
+                    <td>Client Relationship</td>
+                    <td>+15%</td>
+                    <td>Strong history with this client</td>
+                </tr>
+                <tr>
+                    <td>Market Competition</td>
+                    <td>-8%</td>
+                    <td>3 competitors likely to bid</td>
+                </tr>
+                <tr>
+                    <td>Technical Expertise</td>
+                    <td>+12%</td>
+                    <td>Perfect match for our capabilities</td>
+                </tr>
+            </table>
+            
+            <button class="btn" onclick="generateNewPrediction()">🔄 Generate New Prediction</button>
+        </div>
+        
+        <!-- Continuous Learning Panel -->
+        <div id="continuous-learning" class="content-panel">
+            <h2>📈 Continuous Learning System</h2>
+            <div class="prediction-card">
+                <h3>Current Model Performance</h3>
+                <div class="metric">
+                    <span class="metric-value">74.2%</span>
+                    <span>Accuracy</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">1,247</span>
+                    <span>Training Samples</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">+3.8%</span>
+                    <span>Recent Improvement</span>
+                </div>
+            </div>
+            
+            <h3>📊 Learning Progress</h3>
+            <p>The AI system continuously learns from new bid outcomes to improve predictions:</p>
+            <ul style="margin: 20px 0; padding-left: 20px;">
+                <li>✅ 23 successful predictions this month</li>
+                <li>📈 15% improvement in accuracy over last quarter</li>
+                <li>🎯 Identified 5 new winning patterns</li>
+                <li>💡 Adjusted pricing strategy for manufacturing sector</li>
+            </ul>
+            
+            <button class="btn" onclick="triggerLearning()">🚀 Trigger Self-Learning</button>
+        </div>
+        
+        <!-- Model Validation Panel -->
+        <div id="validation" class="content-panel">
+            <h2>✅ Model Validation Results</h2>
+            
+            <h3>📋 Recent Bid Outcomes</h3>
+            <table class="demo-table">
+                <tr>
+                    <th>Project</th>
+                    <th>Predicted Win %</th>
+                    <th>Our Bid</th>
+                    <th>Outcome</th>
+                    <th>Analysis</th>
+                </tr>
+                <tr>
+                    <td>Manufacturing Equipment</td>
+                    <td>72%</td>
+                    <td>$98,500</td>
+                    <td><span class="status-indicator status-win">Won</span></td>
+                    <td>Perfect prediction</td>
+                </tr>
+                <tr>
+                    <td>Office Renovation</td>
+                    <td>45%</td>
+                    <td>$156,200</td>
+                    <td><span class="status-indicator status-loss">Lost</span></td>
+                    <td>Expected outcome</td>
+                </tr>
+                <tr>
+                    <td>IT Infrastructure</td>
+                    <td>83%</td>
+                    <td>$234,750</td>
+                    <td><span class="status-indicator status-win">Won</span></td>
+                    <td>High confidence correct</td>
+                </tr>
+                <tr>
+                    <td>Construction Project</td>
+                    <td>38%</td>
+                    <td>$445,000</td>
+                    <td><span class="status-indicator status-win">Won</span></td>
+                    <td>Margin opportunity identified</td>
+                </tr>
+            </table>
+            
+            <div class="prediction-card">
+                <h3>Validation Metrics</h3>
+                <div class="metric">
+                    <span class="metric-value">78%</span>
+                    <span>Prediction Accuracy</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">12</span>
+                    <span>Margin Opportunities</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">$47K</span>
+                    <span>Additional Revenue</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload Data Panel -->
+        <div id="upload" class="content-panel">
+            <h2>📁 Data Upload</h2>
+            <p>In the full version, you can upload your own bidding data for training the AI model.</p>
+            
+            <div style="border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; border-radius: 10px;">
+                <h3>📊 Sample Data Format</h3>
+                <p>Upload CSV files with columns: project_name, our_bid, competitor_bids, win_loss, client_name, project_value</p>
+                <br>
+                <button class="btn">📁 Choose File (Demo)</button>
+                <p style="margin-top: 10px; color: #666;">This is a demo - file upload requires the full backend deployment</p>
+            </div>
+            
+            <h3>📈 Expected Data Format</h3>
+            <table class="demo-table">
+                <tr>
+                    <th>Column</th>
+                    <th>Type</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td>project_name</td>
+                    <td>Text</td>
+                    <td>"Office Renovation Project"</td>
+                </tr>
+                <tr>
+                    <td>our_bid</td>
+                    <td>Number</td>
+                    <td>125000</td>
+                </tr>
+                <tr>
+                    <td>competitor_bids</td>
+                    <td>Number</td>
+                    <td>130000</td>
+                </tr>
+                <tr>
+                    <td>win_loss</td>
+                    <td>Text</td>
+                    <td>"win" or "loss"</td>
+                </tr>
+                <tr>
+                    <td>client_name</td>
+                    <td>Text</td>
+                    <td>"ABC Corporation"</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function showPanel(panelName) {
+            // Hide all panels
+            const panels = document.querySelectorAll('.content-panel');
+            panels.forEach(panel => panel.classList.remove('active'));
+            
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected panel
+            document.getElementById(panelName).classList.add('active');
+            
+            // Activate corresponding tab
+            event.target.classList.add('active');
+        }
+        
+        function generateNewPrediction() {
+            const predictions = [
+                { prob: '72%', bid: '$98,500', margin: '$14,200' },
+                { prob: '58%', bid: '$156,200', margin: '$22,800' },
+                { prob: '83%', bid: '$67,900', margin: '$9,400' },
+                { prob: '45%', bid: '$234,750', margin: '$31,200' }
+            ];
+            
+            const random = predictions[Math.floor(Math.random() * predictions.length)];
+            
+            document.querySelector('.metric-value').textContent = random.prob;
+            document.querySelectorAll('.metric-value')[1].textContent = random.bid;
+            document.querySelectorAll('.metric-value')[2].textContent = random.margin;
+            
+            alert('🎯 New prediction generated! Win probability updated.');
+        }
+        
+        function triggerLearning() {
+            const currentAccuracy = document.querySelector('#continuous-learning .metric-value');
+            const current = parseFloat(currentAccuracy.textContent);
+            const improved = (current + (Math.random() * 2)).toFixed(1);
+            
+            currentAccuracy.textContent = improved + '%';
+            
+            alert('🚀 Self-learning triggered! Model accuracy improved to ' + improved + '%');
+        }
+        
+        console.log('🚀 AI Proposal Optimization Platform - Static Demo loaded!');
+    </script>
+</body>
+</html>

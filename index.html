@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 AI Proposal Optimization Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .features {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+        }
+        
+        .features h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .demo-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+        }
+        
+        .demo-frame {
+            width: 100%;
+            height: 800px;
+            border: none;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 10px;
+            color: #2e7d32;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI Proposal Optimization Platform</h1>
+            <p class="subtitle">Intelligent bid optimization powered by machine learning</p>
+            
+            <div class="buttons">
+                <button class="btn" onclick="showDemo()">🎯 Launch Live Demo</button>
+                <a href="https://github.com/KnKasibhatla/ai-proposal-optimization" class="btn secondary" target="_blank">
+                    📖 View Source Code
+                </a>
+                <a href="DEPLOYMENT_GUIDE.md" class="btn secondary" target="_blank">
+                    🚀 Deploy Your Own
+                </a>
+            </div>
+            
+            <div class="status">
+                ✅ <strong>Live Demo Available!</strong> Working with sample data - try all features below
+            </div>
+        </div>
+        
+        <div class="features">
+            <h2>🎯 Platform Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Win Prediction</h3>
+                    <p>Advanced machine learning algorithms predict bid win probability based on historical data and market conditions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Smart Pricing</h3>
+                    <p>Optimal pricing recommendations that maximize both win probability and profit margins.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Continuous Learning</h3>
+                    <p>The system continuously improves its predictions based on new bid outcomes and market feedback.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Model Validation</h3>
+                    <p>Comprehensive validation tools to track model performance and identify improvement opportunities.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Rich visualizations and insights into bidding patterns, success rates, and market trends.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Real-time Processing</h3>
+                    <p>Fast, responsive predictions and analysis for time-sensitive bidding decisions.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-container" id="demoContainer" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 20px;">🎯 Live Demo</h2>
+            <iframe src="frontend/public/advanced-app.html" class="demo-frame" id="demoFrame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function showDemo() {
+            const container = document.getElementById('demoContainer');
+            const frame = document.getElementById('demoFrame');
+            
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+            
+            // Ensure iframe loads
+            if (!frame.src.includes('frontend/public/advanced-app.html')) {
+                frame.src = 'frontend/public/advanced-app.html';
+            }
+        }
+        
+        // Show loading status
+        console.log('🚀 AI Proposal Optimization Platform loaded successfully!');
+    </script>
+</body>
+</html>

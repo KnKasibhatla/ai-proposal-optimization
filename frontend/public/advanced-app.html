@@ -1488,19 +1488,29 @@
             }
         }
         
-        // Check API status
+        // Check API status with cache busting
         async function checkAPI() {
             try {
-                const response = await fetch(API_BASE_URL + '/api/health');
+                console.log('Checking API at:', API_BASE_URL);
+                const response = await fetch(API_BASE_URL + '/api/health?v=' + Date.now(), {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 const statusEl = document.getElementById('api-status');
                 if (response.ok) {
-                    statusEl.textContent = 'API Connected ✅';
+                    const data = await response.json();
+                    console.log('API Response:', data);
+                    statusEl.textContent = 'API Online ✅';
                     statusEl.style.color = 'green';
                 } else {
+                    console.error('API Error:', response.status);
                     statusEl.textContent = 'API Error ❌';
                     statusEl.style.color = 'red';
                 }
             } catch (error) {
+                console.error('API Connection Error:', error);
                 const statusEl = document.getElementById('api-status');
                 statusEl.textContent = 'API Offline ❌';
                 statusEl.style.color = 'red';

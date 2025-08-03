@@ -2879,6 +2879,10 @@ def api_get_clients():
 @app.route('/api/predict-pricing', methods=['POST', 'OPTIONS'])
 def api_predict_pricing():
     """FIXED: Advanced pricing prediction with dynamic results"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
         global current_data
         

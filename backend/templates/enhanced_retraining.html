@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Model Retraining - AI Proposal Optimization</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .progress {
+            border-radius: 10px;
+            height: 25px;
+        }
+        
+        .progress-bar {
+            border-radius: 10px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .improvement-badge {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background-color: #28a745;
+        }
+        
+        .status-warning {
+            background-color: #ffc107;
+        }
+        
+        .status-danger {
+            background-color: #dc3545;
+        }
+        
+        .retraining-log {
+            background-color: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>
+                AI Proposal Optimization - Enhanced Retraining
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home me-1"></i>
+                    Back to Main Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h1 class="display-4 mb-3">
+                            <i class="fas fa-brain me-3"></i>
+                            Enhanced Model Retraining System
+                        </h1>
+                        <p class="lead">
+                            Complete retraining system with before/after accuracy comparisons, 
+                            validation learning, and comprehensive output recalculation
+                        </p>
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="currentAccuracy">73.2%</div>
+                                    <div class="metric-label">Current Accuracy</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="targetAccuracy">82.5%</div>
+                                    <div class="metric-label">Target Accuracy</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="expectedImprovement">+9.3%</div>
+                                    <div class="metric-label">Expected Improvement</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="systemStatus">
+                                        <span class="status-indicator status-warning"></span>
+                                        Ready
+                                    </div>
+                                    <div class="metric-label">System Status</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs me-2"></i>Retraining Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Retraining Strategy:</label>
+                            <select class="form-select" id="retrainingStrategy">
+                                <option value="comprehensive">Comprehensive Retraining (Recommended)</option>
+                                <option value="incremental">Incremental Learning</option>
+                                <option value="validation_focused">Validation-Focused</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Learning Rate:</label>
+                            <select class="form-select" id="learningRate">
+                                <option value="adaptive">Adaptive (Recommended)</option>
+                                <option value="conservative">Conservative</option>
+                                <option value="aggressive">Aggressive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Validation Split:</label>
+                            <select class="form-select" id="validationSplit">
+                                <option value="0.2">20% (Standard)</option>
+                                <option value="0.15">15% (More Training Data)</option>
+                                <option value="0.25">25% (More Validation)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary btn-lg w-100" id="startRetrainingBtn">
+                            <i class="fas fa-rocket me-2"></i>
+                            Start Advanced Retraining
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line me-2"></i>Quick Metrics Comparison</h5>
+                    </div>
+                    <div class="card-body" id="quickMetrics">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>Start retraining to see before/after comparison</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="row mb-4" id="progressSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tasks me-2"></i>Live Retraining Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-3">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 id="retrainingProgressBar" role="progressbar" style="width: 0%">
+                                0%
+                            </div>
+                        </div>
+                        <div class="retraining-log" id="retrainingLogs">
+                            <div class="text-success">🚀 Ready to start advanced retraining...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accuracy Overlay Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-area me-2"></i>Model Accuracy Over Time - Before/After Overlay</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="accuracyOverlayChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-brain me-2"></i>Validation Learning Progress</h5>
+                    </div>
+                    <div class="card-body" id="validationLearning">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-brain fa-3x mb-3"></i>
+                            <p>Validation learning data will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs me-2"></i>Individual Model Improvements</h5>
+                    </div>
+                    <div class="card-body" id="modelImprovements">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-cogs fa-3x mb-3"></i>
+                            <p>Model improvement data will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Performance Matrix -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-table me-2"></i>Client Performance Matrix - Before/After</h5>
+                    </div>
+                    <div class="card-body" id="clientPerformanceMatrix">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-table fa-3x mb-3"></i>
+                            <p>Client performance matrix will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results -->
+        <div class="row mb-4" id="detailedResults" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-analytics me-2"></i>Comprehensive Before/After Analysis</h5>
+                    </div>
+                    <div class="card-body" id="comprehensiveAnalysis">
+                        <!-- Detailed results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2024 AI Proposal Optimization Platform - Enhanced Retraining System</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Enhanced Retraining JavaScript -->
+    <script src="/static/js/enhanced_retraining.js"></script>
+    <script src="/static/js/enhanced_retraining_charts.js"></script>
+    
+    <script>
+        // Initialize the enhanced retraining system when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Enhanced Retraining System initializing...');
+            
+            // Check if the system is available
+            fetch('/api/system_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.retraining_system === 'available') {
+                        console.log('✅ Enhanced retraining system is available');
+                        
+                        // Initialize the system
+                        if (typeof EnhancedRetrainingSystem !== 'undefined') {
+                            window.enhancedRetrainingSystem = new EnhancedRetrainingSystem();
+                        }
+                    } else {
+                        console.log('⚠️ Enhanced retraining system is not available');
+                        showSystemUnavailable();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking system status:', error);
+                    showSystemUnavailable();
+                });
+        });
+        
+        function showSystemUnavailable() {
+            const container = document.querySelector('.container-fluid');
+            container.innerHTML = `
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                                <h3>Enhanced Retraining System Unavailable</h3>
+                                <p class="lead">The enhanced retraining system is currently not available.</p>
+                                <p>Please ensure all required components are installed and configured.</p>
+                                <a href="/" class="btn btn-primary">
+                                    <i class="fas fa-home me-2"></i>
+                                    Return to Main Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'error' ? 'alert-danger' : 
+                              type === 'warning' ? 'alert-warning' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Make showNotification globally available
+        window.showNotification = showNotification;
+    </script>
+</body>
+</html>

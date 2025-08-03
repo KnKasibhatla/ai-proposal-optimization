@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced Smart Predictions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container">
+            <span class="navbar-brand">
+                <i class="fas fa-brain"></i> Enhanced Smart Predictions
+            </span>
+            <div class="navbar-nav">
+                <a class="nav-link text-white" href="/">Dashboard</a>
+                <a class="nav-link text-white" href="/predict">Smart Predict</a>
+                <a class="nav-link text-white" href="/upload">Upload Data</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="fas fa-cogs"></i> Advanced Prediction Parameters</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="predictionForm">
+                            <!-- Client Selection -->
+                            <div class="mb-3">
+                                <label class="form-label">Select Client</label>
+                                <select class="form-select" id="client_id">
+                                    <option value="">Choose a client...</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client }}">{{ client }}</option>
+                                    {% endfor %}
+                                    {% if not clients %}
+                                    <option value="Demo_Client_1">Demo Client 1</option>
+                                    <option value="Demo_Client_2">Demo Client 2</option>
+                                    <option value="Demo_Client_3">Demo Client 3</option>
+                                    {% endif %}
+                                </select>
+                                <div class="form-text">Select client to enable historical learning and competitive analysis (optional)</div>
+                            </div>
+                            
+                            <!-- Project Type -->
+                            <div class="mb-3">
+                                <label class="form-label">Project Category</label>
+                                <select class="form-select" id="project_category">
+                                    <option value="software_development">Software Development</option>
+                                    <option value="consulting">Consulting</option>
+                                    <option value="manufacturing">Manufacturing</option>
+                                    <option value="infrastructure">Infrastructure</option>
+                                    <option value="research">Research & Development</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Project Value ($)</label>
+                                <input type="number" class="form-control" id="project_value" value="100000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Quality Score (0-100)</label>
+                                <input type="number" class="form-control" id="quality_score" value="80" min="0" max="100" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Innovation Score (1-10)</label>
+                                <input type="number" class="form-control" id="innovation_score" value="7" min="1" max="10" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Client Relationship Score (1-10)</label>
+                                <input type="number" class="form-control" id="client_relationship_score" value="6" min="1" max="10" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Past Client Experience</label>
+                                <select class="form-select" id="past_client_experience">
+                                    <option value="none">None</option>
+                                    <option value="some" selected>Some</option>
+                                    <option value="extensive">Extensive</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Number of Competitors</label>
+                                <input type="number" class="form-control" id="num_bids" value="5" min="1" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary btn-lg" onclick="getPrediction()">
+                                    <i class="fas fa-magic"></i> Generate Advanced Prediction
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="testConnection()">
+                                    <i class="fas fa-test"></i> Test Connection
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card" id="resultsCard" style="display:none;">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="fas fa-chart-line"></i> Advanced Prediction Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h2 class="text-primary" id="predictedPrice">$0</h2>
+                            <p class="text-muted">AI Recommended Price</p>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Win Probability</span>
+                                <span class="badge bg-success" id="winProb">0%</span>
+                            </div>
+                            <div class="progress mt-2">
+                                <div class="progress-bar bg-success" id="winProgressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Margin Optimization Section -->
+                        <div class="mb-3" id="marginSection" style="display:none;">
+                            <h6><i class="fas fa-chart-pie"></i> Margin Optimization</h6>
+                            <div id="marginContent"></div>
+                        </div>
+                        
+                        <!-- Competitive Strategy Section -->
+                        <div class="mb-3" id="competitiveSection" style="display:none;">
+                            <h6><i class="fas fa-chess"></i> Competitive Strategy</h6>
+                            <div id="competitiveContent"></div>
+                        </div>
+                        
+                        <!-- Strategic Recommendations -->
+                        <div class="mb-3" id="recommendationsSection" style="display:none;">
+                            <h6><i class="fas fa-lightbulb"></i> Strategic Recommendations</h6>
+                            <div id="recommendationsContent"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Enhancement Factors</h6>
+                            <div id="enhancementFactors"></div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Confidence Range</h6>
+                            <div class="d-flex justify-content-between">
+                                <small>Lower: <span id="lower">$0</span></small>
+                                <small>Upper: <span id="upper">$0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Client Analysis Section -->
+        <div class="row mt-4" id="clientAnalysisSection" style="display:none;">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5><i class="fas fa-user-tie"></i> Client Analysis & Historical Learning</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="clientAnalysisContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    async function getPrediction() {
+        const clientId = document.getElementById('client_id').value;
+        
+        // If no client is selected, use a default client or proceed without client-specific analysis
+        const data = {
+            client_id: clientId || 'Demo_Client_1', // Use default client if none selected
+            project_category: document.getElementById('project_category').value,
+            project_value: parseFloat(document.getElementById('project_value').value),
+            quality_score: parseInt(document.getElementById('quality_score').value),
+            innovation_score: parseInt(document.getElementById('innovation_score').value),
+            client_relationship_score: parseInt(document.getElementById('client_relationship_score').value),
+            past_client_experience: document.getElementById('past_client_experience').value,
+            num_bids: parseInt(document.getElementById('num_bids').value)
+        };
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.error) {
+                alert('Prediction failed: ' + result.error);
+                return;
+            }
+            
+            // Display basic results
+            document.getElementById('predictedPrice').textContent = '$' + Math.round(result.predicted_price).toLocaleString();
+            const winPercent = Math.round(result.win_probability * 100);
+            document.getElementById('winProb').textContent = winPercent + '%';
+            document.getElementById('winProgressBar').style.width = winPercent + '%';
+            document.getElementById('lower').textContent = '$' + Math.round(result.confidence_interval.lower).toLocaleString();
+            document.getElementById('upper').textContent = '$' + Math.round(result.confidence_interval.upper).toLocaleString();
+            
+            // Display enhancement factors
+            let factorsHtml = '';
+            if (result.enhancement_factors) {
+                for (const [key, value] of Object.entries(result.enhancement_factors)) {
+                    const displayKey = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    factorsHtml += `<div class="d-flex justify-content-between"><small>${displayKey}:</small><small>${typeof value === 'number' ? value.toFixed(2) : value}</small></div>`;
+                }
+            }
+            document.getElementById('enhancementFactors').innerHTML = factorsHtml;
+            
+            // Display margin optimization
+            if (result.margin_optimization && Object.keys(result.margin_optimization).length > 0) {
+                displayMarginOptimization(result.margin_optimization);
+                document.getElementById('marginSection').style.display = 'block';
+            }
+            
+            // Display competitive strategy
+            if (result.competitive_strategy && Object.keys(result.competitive_strategy).length > 0) {
+                displayCompetitiveStrategy(result.competitive_strategy);
+                document.getElementById('competitiveSection').style.display = 'block';
+            }
+            
+            // Display strategic recommendations
+            if (result.strategic_recommendations && result.strategic_recommendations.length > 0) {
+                displayStrategicRecommendations(result.strategic_recommendations);
+                document.getElementById('recommendationsSection').style.display = 'block';
+            }
+            
+            document.getElementById('resultsCard').style.display = 'block';
+            
+            // Load client analysis only if a client is selected
+            if (clientId) {
+                await loadClientAnalysis(clientId);
+            }
+            
+        } catch (error) {
+            alert('Prediction failed: ' + error.message);
+        }
+    }
+    
+    function testConnection() {
+        alert('JavaScript is working! The prediction button should now function properly.');
+        console.log('Test connection successful');
+    }
+    
+    function displayMarginOptimization(marginData) {
+        let html = '';
+        
+        if (marginData.historical_avg_margin !== undefined) {
+            html += `<div class="mb-2"><strong>Historical Average Margin:</strong> ${(marginData.historical_avg_margin * 100).toFixed(1)}%</div>`;
+        }
+        
+        if (marginData.optimal_margin_range) {
+            html += `<div class="mb-2"><strong>Optimal Margin Range:</strong> ${(marginData.optimal_margin_range.min * 100).toFixed(1)}% - ${(marginData.optimal_margin_range.max * 100).toFixed(1)}%</div>`;
+        }
+        
+        if (marginData.optimal_price_range) {
+            html += `<div class="mb-2"><strong>Optimal Price Range:</strong> $${Math.round(marginData.optimal_price_range.min).toLocaleString()} - $${Math.round(marginData.optimal_price_range.max).toLocaleString()}</div>`;
+        }
+        
+        if (marginData.margin_optimization && marginData.margin_optimization.can_increase_margin) {
+            html += `<div class="alert alert-success"><i class="fas fa-arrow-up"></i> Can increase margin by $${Math.round(marginData.margin_optimization.recommended_price_adjustment).toLocaleString()}</div>`;
+        }
+        
+        document.getElementById('marginContent').innerHTML = html;
+    }
+    
+    function displayCompetitiveStrategy(strategyData) {
+        let html = '';
+        
+        if (strategyData.top_competitors) {
+            html += '<div class="mb-2"><strong>Top Competitors:</strong></div>';
+            for (const [competitor, wins] of Object.entries(strategyData.top_competitors)) {
+                html += `<div class="small">${competitor}: ${wins} wins</div>`;
+            }
+        }
+        
+        if (strategyData.competitive_pricing) {
+            html += `<div class="mb-2"><strong>Average Winning Price:</strong> $${Math.round(strategyData.competitive_pricing.avg_winning_price).toLocaleString()}</div>`;
+        }
+        
+        if (strategyData.recommendations && strategyData.recommendations.length > 0) {
+            html += '<div class="mt-2"><strong>Competitive Recommendations:</strong></div>';
+            strategyData.recommendations.forEach(rec => {
+                html += `<div class="small text-muted">• ${rec}</div>`;
+            });
+        }
+        
+        document.getElementById('competitiveContent').innerHTML = html;
+    }
+    
+    function displayStrategicRecommendations(recommendations) {
+        let html = '<ul class="list-unstyled">';
+        recommendations.forEach(rec => {
+            html += `<li class="mb-1"><i class="fas fa-check text-success"></i> ${rec}</li>`;
+        });
+        html += '</ul>';
+        
+        document.getElementById('recommendationsContent').innerHTML = html;
+    }
+    
+    async function loadClientAnalysis(clientId) {
+        try {
+            const response = await fetch(`/api/analyze-client/${clientId}`);
+            const analysis = await response.json();
+            
+            if (analysis.error) {
+                console.error('Client analysis failed:', analysis.error);
+                return;
+            }
+            
+            displayClientAnalysis(analysis);
+            document.getElementById('clientAnalysisSection').style.display = 'block';
+            
+        } catch (error) {
+            console.error('Failed to load client analysis:', error);
+        }
+    }
+    
+    function displayClientAnalysis(analysis) {
+        let html = '<div class="row">';
+        
+        // Client Profile
+        html += '<div class="col-md-6">';
+        html += '<h6>Client Profile</h6>';
+        if (analysis.client_profile) {
+            const profile = analysis.client_profile;
+            if (profile.industry) html += `<div><strong>Industry:</strong> ${profile.industry}</div>`;
+            if (profile.size) html += `<div><strong>Size:</strong> ${profile.size}</div>`;
+            if (profile.avg_project_value) html += `<div><strong>Avg Project Value:</strong> $${Math.round(profile.avg_project_value).toLocaleString()}</div>`;
+        }
+        html += '</div>';
+        
+        // Strategic Insights
+        html += '<div class="col-md-6">';
+        html += '<h6>Strategic Insights</h6>';
+        if (analysis.strategic_insights) {
+            const insights = analysis.strategic_insights;
+            if (insights.quality_strategy) html += `<div class="small">• ${insights.quality_strategy}</div>`;
+            if (insights.innovation_strategy) html += `<div class="small">• ${insights.innovation_strategy}</div>`;
+            if (insights.pricing_strategy) html += `<div class="small">• ${insights.pricing_strategy}</div>`;
+        }
+        html += '</div>';
+        
+        html += '</div>';
+        
+        // Historical Patterns
+        if (analysis.historical_learning && analysis.historical_learning.key_success_factors) {
+            html += '<div class="mt-3"><h6>Key Success Factors</h6>';
+            const factors = analysis.historical_learning.key_success_factors;
+            for (const [factor, importance] of Object.entries(factors)) {
+                const displayFactor = factor.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                html += `<div class="small">• ${displayFactor}: ${importance.toFixed(2)}</div>`;
+            }
+            html += '</div>';
+        }
+        
+        document.getElementById('clientAnalysisContent').innerHTML = html;
+    }
+    </script>
+</body>
+</html> 

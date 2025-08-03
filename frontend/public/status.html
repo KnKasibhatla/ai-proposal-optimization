@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Status Check</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .btn { 
+            padding: 12px 24px; 
+            margin: 10px 5px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 AI Proposal Platform - Service Status</h1>
+        
+        <div id="status-results">
+            <div class="info">
+                <strong>🔄 Checking services...</strong>
+                <p>Please wait while we verify all services are running properly.</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>🌐 Quick Access Links</h3>
+            <a href="/advanced-app.html" class="btn btn-success">🚀 Launch Main Application</a>
+            <a href="/test-api-status.html" class="btn">🔧 Test API Connection</a>
+            <a href="http://localhost:5000/api/health" class="btn" target="_blank">📊 API Health Check</a>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>🛠️ Alternative Access Methods</h3>
+            <p>If the main application doesn't load, try these alternatives:</p>
+            <ul>
+                <li><a href="http://127.0.0.1:3000/advanced-app.html">127.0.0.1:3000/advanced-app.html</a></li>
+                <li><a href="http://192.168.68.89:3000/advanced-app.html">192.168.68.89:3000/advanced-app.html</a></li>
+                <li>Try a different browser (Chrome, Firefox, Edge)</li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📋 Service Information</h3>
+            <div class="info">
+                <p><strong>Backend API:</strong> http://localhost:5000</p>
+                <p><strong>Frontend App:</strong> http://localhost:3000</p>
+                <p><strong>Main Application:</strong> /advanced-app.html</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkServices() {
+            const resultsDiv = document.getElementById('status-results');
+            let html = '';
+            
+            // Check Frontend
+            try {
+                const frontendResponse = await fetch('/advanced-app.html');
+                if (frontendResponse.ok) {
+                    html += '<div class="status success">✅ Frontend Service: Running and serving files</div>';
+                } else {
+                    html += '<div class="status error">❌ Frontend Service: Not responding properly</div>';
+                }
+            } catch (error) {
+                html += '<div class="status error">❌ Frontend Service: Connection failed</div>';
+            }
+            
+            // Check Backend API
+            try {
+                const backendResponse = await fetch('http://localhost:5000/api/health');
+                const data = await backendResponse.json();
+                
+                if (data.status === 'healthy') {
+                    html += '<div class="status success">✅ Backend API: Healthy and operational</div>';
+                    html += `<div class="status info">🤖 AI Model: ${data.ai_engine_trained ? 'Trained and Ready' : 'Needs Training'}</div>`;
+                } else {
+                    html += '<div class="status error">❌ Backend API: Unhealthy response</div>';
+                }
+            } catch (error) {
+                html += '<div class="status error">❌ Backend API: Connection failed</div>';
+            }
+            
+            // Overall Status
+            if (html.includes('❌')) {
+                html += '<div class="status error"><strong>⚠️ Some services have issues. Try the troubleshooting steps below.</strong></div>';
+            } else {
+                html += '<div class="status success"><strong>🎉 All services are running properly! You can access the main application.</strong></div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Check services when page loads
+        window.addEventListener('load', checkServices);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(checkServices, 30000);
+    </script>
+</body>
+</html>

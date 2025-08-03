@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Proposal Optimization Platform</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 60px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 600px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: #28a745;
+            border-color: #28a745;
+            font-size: 1.1em;
+        }
+        .btn-primary:hover {
+            background: #218838;
+        }
+        .status {
+            margin: 30px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+        .alternatives {
+            margin-top: 40px;
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .alternatives h3 {
+            margin-top: 0;
+            color: #ffd700;
+        }
+        .alternatives a {
+            color: #87ceeb;
+            text-decoration: none;
+        }
+        .alternatives a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AI Proposal Optimization Platform</h1>
+        <p class="subtitle">Manufacturing Proposal Intelligence & Pricing Optimization</p>
+        
+        <div class="status" id="status">
+            <strong>🔄 Checking services...</strong>
+        </div>
+        
+        <a href="advanced-app.html" class="btn btn-primary" id="main-btn">
+            🎯 Launch Application
+        </a>
+        
+        <div class="alternatives">
+            <h3>🛠️ Safari Having Issues? Try These:</h3>
+            <p><strong>Alternative URLs:</strong></p>
+            <ul>
+                <li><a href="http://127.0.0.1:3000/advanced-app.html" target="_blank">127.0.0.1:3000/advanced-app.html</a></li>
+                <li><a href="http://192.168.68.89:3000/advanced-app.html" target="_blank">192.168.68.89:3000/advanced-app.html</a></li>
+            </ul>
+            
+            <p><strong>Recommended Browsers:</strong></p>
+            <ul>
+                <li>🌐 Google Chrome (best compatibility)</li>
+                <li>🦊 Mozilla Firefox</li>
+                <li>⚡ Microsoft Edge</li>
+            </ul>
+            
+            <p><strong>Test Pages:</strong></p>
+            <ul>
+                <li><a href="status.html">Service Status Check</a></li>
+                <li><a href="test-api-status.html">API Connection Test</a></li>
+                <li><a href="test-prediction.html">Prediction Test</a></li>
+            </ul>
+            
+            <p><strong>Direct API:</strong></p>
+            <ul>
+                <li><a href="http://localhost:5000/api/health" target="_blank">Backend Health Check</a></li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 0.9em; opacity: 0.8;">
+            <p>💡 <strong>Safari Tip:</strong> If you see "server unexpectedly dropped the connection", try Chrome or Firefox for better localhost compatibility.</p>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            const statusDiv = document.getElementById('status');
+            const mainBtn = document.getElementById('main-btn');
+            
+            try {
+                // Test backend
+                const backendResponse = await fetch('http://localhost:5000/api/health');
+                const backendData = await backendResponse.json();
+                
+                // Test frontend (current page loaded successfully)
+                const frontendOk = true;
+                
+                if (backendData.status === 'healthy' && frontendOk) {
+                    statusDiv.innerHTML = `
+                        <strong>✅ All Services Running</strong><br>
+                        🤖 AI Model: ${backendData.ai_engine_trained ? 'Trained & Ready' : 'Needs Training'}<br>
+                        🌐 Frontend: Serving Files<br>
+                        🔧 Backend: Healthy
+                    `;
+                    statusDiv.style.background = 'rgba(40, 167, 69, 0.3)';
+                    mainBtn.style.display = 'inline-block';
+                } else {
+                    throw new Error('Services not fully operational');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <strong>⚠️ Service Check Failed</strong><br>
+                    Try the alternative URLs below or use a different browser.
+                `;
+                statusDiv.style.background = 'rgba(220, 53, 69, 0.3)';
+            }
+        }
+        
+        // Check status when page loads
+        window.addEventListener('load', checkStatus);
+        
+        // Auto-redirect after 3 seconds if services are healthy
+        setTimeout(() => {
+            if (document.getElementById('status').innerHTML.includes('✅')) {
+                // Don't auto-redirect in Safari due to connection issues
+                if (!navigator.userAgent.includes('Safari') || navigator.userAgent.includes('Chrome')) {
+                    window.location.href = 'advanced-app.html';
+                }
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced AI Proposal Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container">
+            <span class="navbar-brand">
+                <i class="fas fa-brain"></i> Enhanced AI Proposal Platform
+            </span>
+            <div class="navbar-nav">
+                <a class="nav-link text-white" href="/">Dashboard</a>
+                <a class="nav-link text-white" href="/predict">Smart Predict</a>
+                <a class="nav-link text-white" href="/upload">Upload Data</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>🚀 Enhanced AI Proposal Optimization Platform</h1>
+                <p class="lead">Advanced AI-powered proposal optimization using rich dataset analysis</p>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5><i class="fas fa-chart-line"></i> Total Bids</h5>
+                        <h3>{{ total_bids }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5><i class="fas fa-trophy"></i> Win Rate</h5>
+                        <h3>{{ "%.1f"|format(user_win_rate * 100) }}%</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5><i class="fas fa-dollar-sign"></i> Avg Bid</h5>
+                        <h3>${{ "{:,.0f}".format(avg_bid) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5><i class="fas fa-star"></i> Avg Quality</h5>
+                        <h3>{{ "%.0f".format(avg_quality) }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-lightbulb"></i> Enhanced Platform Features</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success"></i> 
+                                <strong>Rich Dataset Analysis:</strong> 34-column comprehensive analysis
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success"></i> 
+                                <strong>Advanced ML Models:</strong> Ensemble prediction with deep learning
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success"></i> 
+                                <strong>Competitive Intelligence:</strong> Market positioning and competitor analysis
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success"></i> 
+                                <strong>Win Probability Modeling:</strong> Sophisticated probability predictions
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success"></i> 
+                                <strong>Interactive Analytics:</strong> Real-time dashboard and insights
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-rocket"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/upload" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Upload Enhanced Data
+                            </a>
+                            <a href="/predict" class="btn btn-success">
+                                <i class="fas fa-magic"></i> Smart Predictions
+                            </a>
+                            <button class="btn btn-info" onclick="downloadTemplate()">
+                                <i class="fas fa-download"></i> Download Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Enhanced Dataset Format</h6>
+                    <p>The platform now supports a comprehensive 34-column dataset including:</p>
+                    <ul>
+                        <li><strong>Core:</strong> bid_id, price, provider_id, win_loss, quality_score, delivery_time</li>
+                        <li><strong>Enhanced:</strong> innovation_score, client_relationship_score, market_conditions, risk_level</li>
+                        <li><strong>Intelligence:</strong> competition_intensity, strategic_importance, reference_strength</li>
+                        <li><strong>And 20+ additional columns for comprehensive analysis</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    function downloadTemplate() {
+        const csvContent = `bid_id,price,provider_id,win_loss,quality_score,delivery_time,date,complexity,project_category,winning_provider_id,winning_price,num_bids,client_id,client_industry,client_size,project_value,client_relationship_score,geographic_region,competition_intensity,market_conditions,seasonal_factor,urgency_level,technical_difficulty,past_client_experience,proposal_quality,team_experience,innovation_score,risk_level,payment_terms,contract_duration,client_budget_range,incumbent_advantage,strategic_importance,reference_strength
+BID001,50000,{{ user_provider_id }},win,80,25,2024-01-15,6,software_development,{{ user_provider_id }},50000,4,CLIENT001,technology,large,75000,8,north_america,5,stable,1.0,medium,7,extensive,85,15,8,medium,net_30,12,high,none,high,strong`;
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'enhanced_bidding_template.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    </script>
+</body>
+</html> 

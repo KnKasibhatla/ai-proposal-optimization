@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct File Upload - AI Proposal Optimization</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        input[type="file"]:hover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 Direct File Upload</h1>
+        
+        <div class="info">
+            <strong>✅ This method bypasses browser validation issues</strong><br>
+            Upload your CSV or Excel file directly to the server using traditional form submission.
+        </div>
+
+        <form action="http://localhost:5000/api/upload" method="post" enctype="multipart/form-data" target="_blank">
+            <div class="form-group">
+                <label for="file">Select your CSV or Excel file:</label>
+                <input type="file" id="file" name="file" accept=".csv,.xlsx,.xls" required>
+            </div>
+            
+            <button type="submit">🚀 Upload & Train AI Model</button>
+        </form>
+
+        <div id="success" class="success">
+            ✅ File uploaded successfully! Check the new tab for results.
+        </div>
+
+        <div id="error" class="error">
+            ❌ Upload failed. Please try again.
+        </div>
+
+        <div class="back-link">
+            <a href="advanced-app.html">← Back to Main Application</a>
+        </div>
+    </div>
+
+    <script>
+        // Simple success/error handling
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        
+        if (status === 'success') {
+            document.getElementById('success').style.display = 'block';
+        } else if (status === 'error') {
+            document.getElementById('error').style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

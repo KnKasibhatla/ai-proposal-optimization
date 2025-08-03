@@ -1,0 +1,22 @@
+# Elastic Beanstalk ignore file
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.env
+.git/
+.gitignore
+README.md
+.DS_Store
+node_modules/
+archive/
+.ebextensions/
+logs/
+*.log
+frontend/node_modules/
+backend/venv/
+tests/
+docs/
+archive/

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Panel Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .nav-tab {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .nav-tab.active {
+            background: #0056b3;
+        }
+        
+        .nav-tab:hover {
+            background: #0056b3;
+        }
+        
+        .content-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .content-panel.active {
+            display: block !important;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #218838;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI Proposal Optimization Platform</h1>
+            <p>Simple Test Version</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showPanel('dashboard')">📊 Dashboard</button>
+            <button class="nav-tab" onclick="showPanel('upload')">📁 Upload Data</button>
+            <button class="nav-tab" onclick="showPanel('pricing')">💰 Smart Pricing</button>
+        </div>
+        
+        <!-- Dashboard Panel -->
+        <div id="dashboard-panel" class="content-panel active">
+            <h2>📊 Dashboard Overview</h2>
+            <div class="card">
+                <h3>System Status</h3>
+                <p><strong>API Status:</strong> <span id="api-status">Checking...</span></p>
+                <p><strong>AI Model:</strong> <span id="model-status">Not trained</span></p>
+                <p><strong>Total Records:</strong> <span id="total-records">0</span></p>
+            </div>
+        </div>
+        
+        <!-- Upload Panel -->
+        <div id="upload-panel" class="content-panel">
+            <h2>📁 Upload Proposal Data</h2>
+            <div class="card">
+                <h3>📤 Upload File</h3>
+                <div class="form-group">
+                    <label for="file-input">Select CSV or Excel file:</label>
+                    <input type="file" id="file-input" class="form-control" accept=".csv,.xlsx,.xls">
+                </div>
+                <button class="btn" onclick="uploadFile()">
+                    <span id="upload-btn-text">Upload & Train AI Model</span>
+                    <span id="upload-loading" class="hidden">Loading...</span>
+                </button>
+                <div id="upload-result"></div>
+            </div>
+            
+            <div class="card">
+                <h3>📋 Data Requirements</h3>
+                <p><strong>Required Columns:</strong></p>
+                <ul>
+                    <li><code>client_id</code> - Unique client identifier</li>
+                    <li><code>bid_amount</code> - Proposed bid amount</li>
+                    <li><code>win_loss</code> - Outcome ("win" or "loss")</li>
+                </ul>
+                <p><strong>Sample Data:</strong></p>
+                <pre>client_id,bid_amount,win_loss,quality_score
+CLIENT-001,250000,win,85
+CLIENT-002,180000,loss,72</pre>
+            </div>
+        </div>
+        
+        <!-- Pricing Panel -->
+        <div id="pricing-panel" class="content-panel">
+            <h2>💰 Smart Pricing Prediction</h2>
+            <div class="card">
+                <h3>🎯 Pricing Input</h3>
+                <div class="form-group">
+                    <label for="base-amount">Base Amount ($):</label>
+                    <input type="number" id="base-amount" class="form-control" placeholder="250000" value="250000">
+                </div>
+                <button class="btn" onclick="predictPricing()">
+                    <span id="predict-btn-text">Get AI Prediction</span>
+                    <span id="predict-loading" class="hidden">Loading...</span>
+                </button>
+                <div id="pricing-results" class="hidden">
+                    <div class="alert alert-success">
+                        <h4>🎯 Optimal Price: <span id="optimal-price">$0</span></h4>
+                        <p><strong>Win Probability:</strong> <span id="win-probability">0%</span></p>
+                        <p><strong>Expected Value:</strong> <span id="expected-value">$0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        console.log('Simple test page loading...');
+        
+        // Global variables
+        const API_BASE_URL = 'http://localhost:5000';
+        
+        // Panel Navigation
+        function showPanel(panelName) {
+            console.log('showPanel called with:', panelName);
+            
+            try {
+                // Hide all panels
+                document.querySelectorAll('.content-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                
+                // Remove active class from all tabs
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Show selected panel
+                const targetPanel = document.getElementById(panelName + '-panel');
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                    console.log('Panel shown:', panelName + '-panel');
+                } else {
+                    console.error('Panel not found:', panelName + '-panel');
+                }
+                
+                // Add active class to clicked tab
+                if (event && event.target) {
+                    event.target.classList.add('active');
+                }
+                
+                return false;
+            } catch (error) {
+                console.error('Error in showPanel:', error);
+                return false;
+            }
+        }
+        
+        // Upload File
+        async function uploadFile() {
+            console.log('uploadFile called');
+            
+            try {
+                const fileInput = document.getElementById('file-input');
+                if (!fileInput || !fileInput.files[0]) {
+                    alert('Please select a file to upload');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                console.log('Uploading file:', file.name);
+                
+                // Show loading
+                const uploadBtn = document.getElementById('upload-btn-text');
+                const uploadLoading = document.getElementById('upload-loading');
+                const uploadResult = document.getElementById('upload-result');
+                
+                if (uploadBtn) uploadBtn.style.display = 'none';
+                if (uploadLoading) uploadLoading.classList.remove('hidden');
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Make API call
+                const response = await fetch(API_BASE_URL + '/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                console.log('Upload response:', result);
+                
+                if (response.ok) {
+                    if (uploadResult) {
+                        uploadResult.innerHTML = '<div class="alert alert-success">' +
+                            '<h4>✅ Upload Successful!</h4>' +
+                            '<p><strong>Records:</strong> ' + (result.total_records || 'N/A') + '</p>' +
+                            '<p><strong>Status:</strong> ' + (result.message || 'Data uploaded successfully') + '</p>' +
+                            '</div>';
+                    }
+                    
+                    // Update status
+                    const modelStatus = document.getElementById('model-status');
+                    const totalRecords = document.getElementById('total-records');
+                    if (modelStatus) modelStatus.textContent = 'Trained ✅';
+                    if (totalRecords) totalRecords.textContent = result.total_records || '0';
+                    
+                } else {
+                    if (uploadResult) {
+                        uploadResult.innerHTML = '<div class="alert alert-error">' +
+                            '<h4>❌ Upload Failed</h4>' +
+                            '<p>' + (result.error || 'Unknown error occurred') + '</p>' +
+                            '</div>';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                const uploadResult = document.getElementById('upload-result');
+                if (uploadResult) {
+                    uploadResult.innerHTML = '<div class="alert alert-error">' +
+                        '<h4>❌ Upload Failed</h4>' +
+                        '<p>' + error.message + '</p>' +
+                        '</div>';
+                }
+            } finally {
+                // Reset UI
+                const uploadBtn = document.getElementById('upload-btn-text');
+                const uploadLoading = document.getElementById('upload-loading');
+                
+                if (uploadBtn) uploadBtn.style.display = 'inline';
+                if (uploadLoading) uploadLoading.classList.add('hidden');
+            }
+        }
+        
+        // Predict Pricing
+        async function predictPricing() {
+            console.log('predictPricing called');
+            
+            try {
+                const baseAmountInput = document.getElementById('base-amount');
+                if (!baseAmountInput) {
+                    alert('Please enter a base amount');
+                    return;
+                }
+                
+                const baseAmount = parseFloat(baseAmountInput.value) || 250000;
+                
+                // Show loading
+                const predictBtn = document.getElementById('predict-btn-text');
+                const predictLoading = document.getElementById('predict-loading');
+                
+                if (predictBtn) predictBtn.style.display = 'none';
+                if (predictLoading) predictLoading.classList.remove('hidden');
+                
+                // Make API call
+                const response = await fetch(API_BASE_URL + '/api/predict-pricing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_id: 'TEST-CLIENT',
+                        base_amount: baseAmount,
+                        industry: 'General',
+                        project_type: 'Standard'
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Prediction response:', result);
+                
+                if (response.ok) {
+                    // Show results
+                    const pricingResults = document.getElementById('pricing-results');
+                    if (pricingResults) {
+                        pricingResults.classList.remove('hidden');
+                        
+                        // Update values
+                        const priceEl = document.getElementById('optimal-price');
+                        const probEl = document.getElementById('win-probability');
+                        const valueEl = document.getElementById('expected-value');
+                        
+                        if (priceEl && result.optimal_price) {
+                            priceEl.textContent = '$' + (result.optimal_price.price || baseAmount).toLocaleString();
+                        }
+                        if (probEl && result.optimal_price) {
+                            probEl.textContent = ((result.optimal_price.win_probability || 0.6) * 100).toFixed(1) + '%';
+                        }
+                        if (valueEl && result.optimal_price) {
+                            valueEl.textContent = '$' + (result.optimal_price.expected_value || baseAmount * 0.6).toLocaleString();
+                        }
+                    }
+                } else {
+                    alert('Prediction failed: ' + (result.error || 'Unknown error'));
+                }
+                
+            } catch (error) {
+                console.error('Prediction error:', error);
+                alert('Prediction failed: ' + error.message);
+            } finally {
+                // Reset UI
+                const predictBtn = document.getElementById('predict-btn-text');
+                const predictLoading = document.getElementById('predict-loading');
+                
+                if (predictBtn) predictBtn.style.display = 'inline';
+                if (predictLoading) predictLoading.classList.add('hidden');
+            }
+        }
+        
+        // Check API Status
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(API_BASE_URL + '/api/health');
+                const statusEl = document.getElementById('api-status');
+                
+                if (response.ok) {
+                    if (statusEl) statusEl.textContent = 'Connected ✅';
+                    console.log('API Status: Connected');
+                } else {
+                    if (statusEl) statusEl.textContent = 'Error ❌';
+                    console.log('API Status: Error');
+                }
+            } catch (error) {
+                const statusEl = document.getElementById('api-status');
+                if (statusEl) statusEl.textContent = 'Offline ❌';
+                console.error('API Status check failed:', error);
+            }
+        }
+        
+        // Initialize
+        function init() {
+            console.log('Initializing simple test page...');
+            checkAPIStatus();
+            
+            // Ensure dashboard is visible
+            const dashboard = document.getElementById('dashboard-panel');
+            if (dashboard) {
+                dashboard.classList.add('active');
+                console.log('Dashboard panel activated');
+            }
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+        console.log('Simple test page loaded successfully!');
+    </script>
+</body>
+</html>

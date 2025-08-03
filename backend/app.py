@@ -2785,9 +2785,17 @@ def api_analyze_margin():
         return jsonify({'error': str(e)}), 500
 
 # Advanced API endpoints for React frontend
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/health', methods=['GET', 'OPTIONS'])
 def api_health():
     """Health check endpoint"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        return response
+        
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),

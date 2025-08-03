@@ -1661,14 +1661,6 @@ def dashboard():
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
     """Upload and process data file"""
-    # Handle CORS preflight request
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'OK'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        return response
-    
     try:
         global current_data, ai_engine
         
@@ -2788,14 +2780,6 @@ def api_analyze_margin():
 @app.route('/api/health', methods=['GET', 'OPTIONS'])
 def api_health():
     """Health check endpoint"""
-    # Handle CORS preflight request
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'OK'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        return response
-        
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
@@ -2806,14 +2790,6 @@ def api_health():
 @app.route('/api/clients', methods=['GET', 'OPTIONS'])
 def api_get_clients():
     """Get list of available clients with enhanced details"""
-    # Handle CORS preflight request
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'OK'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        return response
-    
     try:
         global current_data
         
@@ -2903,14 +2879,6 @@ def api_get_clients():
 @app.route('/api/predict-pricing', methods=['POST', 'OPTIONS'])
 def api_predict_pricing():
     """FIXED: Advanced pricing prediction with dynamic results"""
-    # Handle CORS preflight request
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'OK'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        return response
-    
     try:
         global current_data
         
@@ -3007,14 +2975,6 @@ def api_predict_pricing():
 @app.route('/api/feature-importance', methods=['GET', 'OPTIONS'])
 def api_feature_importance():
     """Get feature importance ranking"""
-    # Handle CORS preflight request
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'OK'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        return response
-    
     try:
         global ai_engine
         
@@ -3355,14 +3315,6 @@ def api_competitor_analysis():
 @app.route('/api/stats', methods=['GET', 'OPTIONS'])
 def api_stats():
     """Get dashboard statistics"""
-    # Handle CORS preflight request
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'OK'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        return response
-    
     try:
         global current_data
         

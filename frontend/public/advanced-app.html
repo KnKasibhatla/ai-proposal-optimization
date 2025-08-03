@@ -2586,142 +2586,107 @@
             detailHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
             detailHtml += '<thead><tr style="background: #f8f9fa;">';
             detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Client</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Total Bids</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Wins/Losses</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Win Rate</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Avg Historical Bid</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Avg AI Recommended</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Winning Bidders</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Accuracy</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Opportunity</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Project</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Our Bid</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Recommended</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Prediction</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Actual Outcome</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Winning Bid</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Model Accurate?</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Analysis</th>';
             detailHtml += '</tr></thead><tbody>';
             
-            // Group results by client to avoid duplicates
-            const clientGroups = {};
-            validationData.validations.forEach(function(result) {
-                const clientId = result.client_id || 'Unknown';
-                if (!clientGroups[clientId]) {
-                    clientGroups[clientId] = {
-                        client_id: clientId,
-                        bids: [],
-                        wins: 0,
-                        losses: 0,
-                        correct_predictions: 0,
-                        total_bid_value: 0,
-                        total_recommended_value: 0,
-                        winning_bidders: new Set()
-                    };
-                }
-                
-                clientGroups[clientId].bids.push(result);
-                clientGroups[clientId].total_bid_value += (result.historical_bid || 0);
-                clientGroups[clientId].total_recommended_value += (result.recommended_price || result.historical_bid || 0);
-                
-                const actualWin = result.actual_outcome === 'win';
-                const predictedWin = result.predicted_outcome === 'win';
-                
-                if (actualWin) {
-                    clientGroups[clientId].wins++;
-                    clientGroups[clientId].winning_bidders.add('Us');
-                } else {
-                    clientGroups[clientId].losses++;
-                    // Add competitor as winning bidder if available
-                    const winningBidder = result.winning_bidder || result.winner_id || 'Competitor';
-                    if (winningBidder !== 'Unknown') {
-                        clientGroups[clientId].winning_bidders.add(winningBidder);
-                    }
-                }
-                
-                if (actualWin === predictedWin) {
-                    clientGroups[clientId].correct_predictions++;
-                }
-            });
+            // Display individual validation results (projects)
+            const validationResults = validationData.validations.slice(0, displayLimit);
             
-            // Convert to array and limit display
-            const clientArray = Object.values(clientGroups).slice(0, displayLimit);
-            
-            clientArray.forEach(function(clientData, index) {
+            validationResults.forEach(function(result, index) {
                 try {
-                    const totalBids = clientData.bids.length;
-                    const winRate = totalBids > 0 ? (clientData.wins / totalBids * 100) : 0;
-                    const aiAccuracy = totalBids > 0 ? (clientData.correct_predictions / totalBids * 100) : 0;
-                    const avgHistoricalBid = totalBids > 0 ? (clientData.total_bid_value / totalBids) : 0;
-                    const avgRecommendedBid = totalBids > 0 ? (clientData.total_recommended_value / totalBids) : 0;
-                
-                // Determine row color based on win rate and AI accuracy
-                let rowClass = '';
-                if (winRate >= 75) {
-                    rowClass = 'style="background: #d4edda;"'; // Green for high win rate
-                } else if (winRate >= 50) {
-                    rowClass = 'style="background: #fff3cd;"'; // Yellow for medium win rate
-                } else if (winRate >= 25) {
-                    rowClass = 'style="background: #f8d7da;"'; // Light red for low win rate
-                } else {
-                    rowClass = 'style="background: #f1f3f4;"'; // Gray for very low win rate
-                }
-                
-                detailHtml += '<tr ' + rowClass + '>';
-                
-                // Client ID
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + clientData.client_id + '</td>';
-                
-                // Total Bids
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + totalBids + '</td>';
-                
-                // Wins/Losses
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + 
-                    '<span style="color: #28a745; font-weight: bold;">' + clientData.wins + '</span> / ' +
-                    '<span style="color: #dc3545; font-weight: bold;">' + clientData.losses + '</span></td>';
-                
-                // Win Rate
-                const winRateColor = winRate >= 50 ? '#28a745' : '#dc3545';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + winRateColor + ';">' + 
-                    winRate.toFixed(1) + '%</td>';
-                
-                // Average Historical Bid
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">$' + 
-                    avgHistoricalBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
-                
-                // Average AI Recommended Bid
-                const recommendColor = avgRecommendedBid > avgHistoricalBid ? '#28a745' : 
-                    avgRecommendedBid < avgHistoricalBid ? '#dc3545' : '#333';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; color: ' + recommendColor + ';">$' + 
-                    avgRecommendedBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
-                
-                // Winning Bidders (convert Set to array and join)
-                const winningBiddersArray = Array.from(clientData.winning_bidders);
-                const winningBiddersText = winningBiddersArray.length > 0 ? winningBiddersArray.join(', ') : 'N/A';
-                const biddersColor = winningBiddersArray.includes('Us') ? '#28a745' : '#dc3545';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-size: 11px; color: ' + biddersColor + ';">' + 
-                    winningBiddersText + '</td>';
-                
-                // AI Accuracy
-                const accuracyColor = aiAccuracy >= 70 ? '#28a745' : aiAccuracy >= 50 ? '#ffc107' : '#dc3545';
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + accuracyColor + ';">' + 
-                    aiAccuracy.toFixed(1) + '%</td>';
-                
-                // Opportunity Analysis
-                let opportunity = '';
-                const bidDifference = avgRecommendedBid - avgHistoricalBid;
-                const bidDiffPercent = avgHistoricalBid > 0 ? (bidDifference / avgHistoricalBid * 100) : 0;
-                
-                if (winRate < 30 && aiAccuracy > 60) {
-                    opportunity = '🎯 High Potential';
-                } else if (winRate > 70 && bidDiffPercent > 5) {
-                    opportunity = '💰 Margin Opportunity';
-                } else if (aiAccuracy < 50) {
-                    opportunity = '⚠️ Needs Analysis';
-                } else {
-                    opportunity = '✅ Optimized';
-                }
-                
-                detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: 500; font-size: 11px;">' + 
-                    opportunity + '</td>';
-                
-                detailHtml += '</tr>';
-                
+                    const actualWin = result.actual_outcome === 'win';
+                    const predictedWin = result.predicted_outcome === 'win';
+                    const isAccurate = actualWin === predictedWin;
+                    
+                    // Determine row color based on model accuracy
+                    let rowClass = '';
+                    if (isAccurate && actualWin) {
+                        rowClass = 'style="background: #d4edda;"'; // Green for correct win prediction
+                    } else if (isAccurate && !actualWin) {
+                        rowClass = 'style="background: #e2e3e5;"'; // Gray for correct loss prediction
+                    } else if (!isAccurate && actualWin) {
+                        rowClass = 'style="background: #fff3cd;"'; // Yellow for missed win
+                    } else {
+                        rowClass = 'style="background: #f8d7da;"'; // Red for false positive
+                    }
+                    
+                    detailHtml += '<tr ' + rowClass + '>';
+                    
+                    // Client ID
+                    const clientId = result.client_id || 'Unknown';
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + clientId + '</td>';
+                    
+                    // Project Name
+                    const projectName = result.project_name || result.project_id || 'Project #' + (index + 1);
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd;">' + projectName + '</td>';
+                    
+                    // Our Bid
+                    const ourBid = result.historical_bid || 0;
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">$' + 
+                        ourBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                    
+                    // AI Recommended Bid
+                    const aiRecommended = result.recommended_price || result.historical_bid || 0;
+                    const recommendColor = aiRecommended > ourBid ? '#28a745' : 
+                        aiRecommended < ourBid ? '#dc3545' : '#333';
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; color: ' + recommendColor + ';">$' + 
+                        aiRecommended.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                    
+                    // AI Prediction
+                    const predictionColor = predictedWin ? '#28a745' : '#dc3545';
+                    const predictionText = predictedWin ? 'Win' : 'Loss';
+                    const winProb = result.win_probability ? ' (' + (result.win_probability * 100).toFixed(1) + '%)' : '';
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + predictionColor + ';">' + 
+                        predictionText + winProb + '</td>';
+                    
+                    // Actual Outcome
+                    const outcomeColor = actualWin ? '#28a745' : '#dc3545';
+                    const outcomeText = actualWin ? 'Won' : 'Lost';
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + outcomeColor + ';">' + 
+                        outcomeText + '</td>';
+                    
+                    // Winning Bid
+                    const winningBid = result.winning_price || 0;
+                    const winningBidText = winningBid > 0 ? '$' + winningBid.toLocaleString(undefined, {maximumFractionDigits: 0}) : 
+                        (actualWin ? 'Our Bid' : 'N/A');
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + winningBidText + '</td>';
+                    
+                    // Model Accuracy for this project
+                    const accuracyColor = isAccurate ? '#28a745' : '#dc3545';
+                    const accuracyIcon = isAccurate ? '✅' : '❌';
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + accuracyColor + ';">' + 
+                        accuracyIcon + '</td>';
+                    
+                    // Analysis
+                    let analysis = '';
+                    if (actualWin && predictedWin) {
+                        if (aiRecommended > ourBid * 1.05) {
+                            analysis = '💰 Could bid higher';
+                        } else {
+                            analysis = '✅ Correct prediction';
+                        }
+                    } else if (!actualWin && !predictedWin) {
+                        analysis = '✅ Avoided loss';
+                    } else if (actualWin && !predictedWin) {
+                        analysis = '⚠️ Missed opportunity';
+                    } else {
+                        analysis = '❌ Overconfident';
+                    }
+                    
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: 500; font-size: 11px;">' + 
+                        analysis + '</td>';
+                    
+                    detailHtml += '</tr>';
+                    
                 } catch (error) {
-                    console.error('Error processing client group', clientId, ':', error, clientGroup);
+                    console.error('Error processing validation result', index, ':', error, result);
                     // Skip this row and continue
                 }
             });

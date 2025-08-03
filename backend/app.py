@@ -3763,9 +3763,19 @@ if __name__ == '__main__':
     print("🚀 AI Proposal Optimization Platform Starting...")
     print(f"👤 Provider ID: {user_provider_id}")
     print(f"📊 Quality Score Range: 0-100")
-    print("📍 Open your browser to: http://localhost:5000")
-    print("📁 Upload your bidding data at: http://localhost:5000/upload")
-    print("🎯 Use Smart Predict at: http://localhost:5000/predict")
-    print("⏹️  Press Ctrl+C to stop")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # Get port from environment variable (for production hosting)
+    port = int(os.environ.get('PORT', 5000))
+    
+    if port == 5000:
+        print("📍 Open your browser to: http://localhost:5000")
+        print("📁 Upload your bidding data at: http://localhost:5000/upload")
+        print("🎯 Use Smart Predict at: http://localhost:5000/predict")
+        print("⏹️  Press Ctrl+C to stop")
+        debug_mode = True
+    else:
+        print(f"🌐 Production server starting on port {port}")
+        debug_mode = False
+    
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
     

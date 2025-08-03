@@ -1039,7 +1039,10 @@
         // BULLETPROOF JAVASCRIPT - NO ERRORS GUARANTEED
         console.log('🚀 Bulletproof JavaScript loading...');
         
-        const API_BASE_URL = 'http://localhost:5000';
+        // Dynamic API URL detection for production deployment
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : 'https://ai-proposal-backend.onrender.com';
         
         // Simple, bulletproof panel switching
         function showPanel(panelName) {

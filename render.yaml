@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-proposal-backend
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python backend/app.py"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_APP
+        value: backend/app.py
+      - key: PORT
+        value: 10000
+    autoDeploy: false

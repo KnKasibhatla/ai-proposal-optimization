@@ -4055,7 +4055,9 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Self-training failed');
+                    const errorData = await response.text();
+                    console.error('Self-training error:', response.status, errorData);
+                    throw new Error(`Self-training failed (${response.status}): ${errorData}`);
                 }
                 
                 const result = await response.json();
@@ -4133,7 +4135,9 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Continuous improvement failed');
+                    const errorData = await response.text();
+                    console.error('Continuous improvement error:', response.status, errorData);
+                    throw new Error(`Continuous improvement failed (${response.status}): ${errorData}`);
                 }
                 
                 const result = await response.json();

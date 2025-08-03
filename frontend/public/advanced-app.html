@@ -2596,14 +2596,52 @@
             detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Analysis</th>';
             detailHtml += '</tr></thead><tbody>';
             
-            // Display individual validation results (projects)
-            const validationResults = validationData.validations.slice(0, displayLimit);
+            // Group results by client AND project to show unique client-project combinations
+            const clientProjectGroups = {};
+            validationData.validations.forEach(function(result) {
+                const clientId = result.client_id || 'Unknown';
+                const projectId = result.project_name || result.project_id || ('Project-' + Math.random().toString(36).substr(2, 9));
+                const groupKey = clientId + '::' + projectId;
+                
+                if (!clientProjectGroups[groupKey]) {
+                    clientProjectGroups[groupKey] = {
+                        client_id: clientId,
+                        project_name: projectId,
+                        bids: [],
+                        total_bid_value: 0,
+                        total_recommended_value: 0,
+                        actual_outcome: result.actual_outcome,
+                        predicted_outcome: result.predicted_outcome,
+                        win_probability: result.win_probability,
+                        winning_price: result.winning_price,
+                        bid_count: 0
+                    };
+                }
+                
+                clientProjectGroups[groupKey].bids.push(result);
+                clientProjectGroups[groupKey].total_bid_value += (result.historical_bid || 0);
+                clientProjectGroups[groupKey].total_recommended_value += (result.recommended_price || result.historical_bid || 0);
+                clientProjectGroups[groupKey].bid_count++;
+                
+                // Use the latest/most recent outcome data
+                clientProjectGroups[groupKey].actual_outcome = result.actual_outcome;
+                clientProjectGroups[groupKey].predicted_outcome = result.predicted_outcome;
+                clientProjectGroups[groupKey].win_probability = result.win_probability;
+                clientProjectGroups[groupKey].winning_price = result.winning_price;
+            });
             
-            validationResults.forEach(function(result, index) {
+            // Convert to array and limit display
+            const clientProjectArray = Object.values(clientProjectGroups).slice(0, displayLimit);
+            
+            clientProjectArray.forEach(function(projectData, index) {
                 try {
-                    const actualWin = result.actual_outcome === 'win';
-                    const predictedWin = result.predicted_outcome === 'win';
+                    const actualWin = projectData.actual_outcome === 'win';
+                    const predictedWin = projectData.predicted_outcome === 'win';
                     const isAccurate = actualWin === predictedWin;
+                    
+                    // Calculate average bid amounts for this project
+                    const avgOurBid = projectData.bid_count > 0 ? (projectData.total_bid_value / projectData.bid_count) : 0;
+                    const avgAiRecommended = projectData.bid_count > 0 ? (projectData.total_recommended_value / projectData.bid_count) : 0;
                     
                     // Determine row color based on model accuracy
                     let rowClass = '';
@@ -2620,29 +2658,32 @@
                     detailHtml += '<tr ' + rowClass + '>';
                     
                     // Client ID
-                    const clientId = result.client_id || 'Unknown';
-                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + clientId + '</td>';
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + projectData.client_id + '</td>';
                     
-                    // Project Name
-                    const projectName = result.project_name || result.project_id || 'Project #' + (index + 1);
-                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd;">' + projectName + '</td>';
+                    // Project Name (with bid count if multiple bids)
+                    const projectDisplayName = projectData.bid_count > 1 ? 
+                        projectData.project_name + ' (' + projectData.bid_count + ' bids)' : 
+                        projectData.project_name;
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd;">' + projectDisplayName + '</td>';
                     
-                    // Our Bid
-                    const ourBid = result.historical_bid || 0;
-                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">$' + 
-                        ourBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                    // Our Bid (average if multiple)
+                    const bidDisplayText = projectData.bid_count > 1 ? 
+                        'Avg: $' + avgOurBid.toLocaleString(undefined, {maximumFractionDigits: 0}) :
+                        '$' + avgOurBid.toLocaleString(undefined, {maximumFractionDigits: 0});
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + bidDisplayText + '</td>';
                     
-                    // AI Recommended Bid
-                    const aiRecommended = result.recommended_price || result.historical_bid || 0;
-                    const recommendColor = aiRecommended > ourBid ? '#28a745' : 
-                        aiRecommended < ourBid ? '#dc3545' : '#333';
-                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; color: ' + recommendColor + ';">$' + 
-                        aiRecommended.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                    // AI Recommended Bid (average if multiple)
+                    const recommendColor = avgAiRecommended > avgOurBid ? '#28a745' : 
+                        avgAiRecommended < avgOurBid ? '#dc3545' : '#333';
+                    const aiDisplayText = projectData.bid_count > 1 ? 
+                        'Avg: $' + avgAiRecommended.toLocaleString(undefined, {maximumFractionDigits: 0}) :
+                        '$' + avgAiRecommended.toLocaleString(undefined, {maximumFractionDigits: 0});
+                    detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; color: ' + recommendColor + ';">' + aiDisplayText + '</td>';
                     
                     // AI Prediction
                     const predictionColor = predictedWin ? '#28a745' : '#dc3545';
                     const predictionText = predictedWin ? 'Win' : 'Loss';
-                    const winProb = result.win_probability ? ' (' + (result.win_probability * 100).toFixed(1) + '%)' : '';
+                    const winProb = projectData.win_probability ? ' (' + (projectData.win_probability * 100).toFixed(1) + '%)' : '';
                     detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ' + predictionColor + ';">' + 
                         predictionText + winProb + '</td>';
                     
@@ -2653,7 +2694,7 @@
                         outcomeText + '</td>';
                     
                     // Winning Bid
-                    const winningBid = result.winning_price || 0;
+                    const winningBid = projectData.winning_price || 0;
                     const winningBidText = winningBid > 0 ? '$' + winningBid.toLocaleString(undefined, {maximumFractionDigits: 0}) : 
                         (actualWin ? 'Our Bid' : 'N/A');
                     detailHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + winningBidText + '</td>';
@@ -2667,7 +2708,7 @@
                     // Analysis
                     let analysis = '';
                     if (actualWin && predictedWin) {
-                        if (aiRecommended > ourBid * 1.05) {
+                        if (avgAiRecommended > avgOurBid * 1.05) {
                             analysis = '💰 Could bid higher';
                         } else {
                             analysis = '✅ Correct prediction';
@@ -2686,7 +2727,7 @@
                     detailHtml += '</tr>';
                     
                 } catch (error) {
-                    console.error('Error processing validation result', index, ':', error, result);
+                    console.error('Error processing client-project group', index, ':', error, projectData);
                     // Skip this row and continue
                 }
             });

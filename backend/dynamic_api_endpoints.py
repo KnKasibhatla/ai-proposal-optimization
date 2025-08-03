@@ -117,7 +117,7 @@ def add_dynamic_api_endpoints(app, current_data):
             logger.error(f"Model performance API error: {str(e)}")
             return jsonify({'error': f'Performance analysis failed: {str(e)}'}), 500
     
-    @app.route('/api/model/quick-metrics', methods=['GET'])
+    @app.route('/api/model/quick-metrics', methods=['GET', 'OPTIONS'])
     def api_quick_metrics():
         """Get quick model metrics for dashboard"""
         try:
@@ -186,7 +186,7 @@ def add_dynamic_api_endpoints(app, current_data):
             logger.error(f"Accuracy trend API error: {str(e)}")
             return jsonify({'error': f'Accuracy trend failed: {str(e)}'}), 500
     
-    @app.route('/api/model/retraining-analysis', methods=['GET'])
+    @app.route('/api/model/retraining-analysis', methods=['GET', 'OPTIONS'])
     def api_retraining_analysis():
         """Get retraining analysis and recommendations"""
         try:

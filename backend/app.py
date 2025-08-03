@@ -2465,9 +2465,13 @@ def api_validate_historical():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/historical/enhanced-validate', methods=['POST'])
+@app.route('/api/historical/enhanced-validate', methods=['POST', 'OPTIONS'])
 def api_enhanced_historical_validation():
     """Enhanced API endpoint for comprehensive historical validation"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
         global current_data
         
@@ -3617,7 +3621,7 @@ def model_performance():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/model/quick-metrics', methods=['GET'])
+@app.route('/api/model/quick-metrics', methods=['GET', 'OPTIONS'])
 def quick_metrics():
     """Quick metrics for model performance"""
     try:
@@ -3657,7 +3661,7 @@ def accuracy_trend():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/model/retraining-analysis', methods=['GET'])
+@app.route('/api/model/retraining-analysis', methods=['GET', 'OPTIONS'])
 def retraining_analysis():
     """Analyze if model retraining is needed"""
     try:
@@ -3686,9 +3690,13 @@ def retraining_analysis():
 
 
 # Continuous Learning Endpoints
-@app.route('/api/model/self-train', methods=['POST'])
+@app.route('/api/model/self-train', methods=['POST', 'OPTIONS'])
 def api_self_train():
     """Trigger self-training on historical data"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     global ai_engine
     
     if ai_engine is None:
@@ -3700,7 +3708,7 @@ def api_self_train():
     except Exception as e:
         return jsonify({'error': f'Self-training failed: {str(e)}'}), 500
 
-@app.route('/api/model/learning-metrics', methods=['GET'])
+@app.route('/api/model/learning-metrics', methods=['GET', 'OPTIONS'])
 def api_learning_metrics():
     """Get current learning and performance metrics"""
     global ai_engine
@@ -3737,9 +3745,13 @@ def api_record_outcome():
     except Exception as e:
         return jsonify({'error': f'Failed to record outcome: {str(e)}'}), 500
 
-@app.route('/api/model/continuous-improve', methods=['POST'])
+@app.route('/api/model/continuous-improve', methods=['POST', 'OPTIONS'])
 def api_continuous_improve():
     """Run continuous improvement cycle"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     global ai_engine
     
     if ai_engine is None:

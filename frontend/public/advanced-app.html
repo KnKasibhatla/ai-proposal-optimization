@@ -4197,6 +4197,62 @@
             }
         }
         
+        // Missing showAlert function
+        function showAlert(message, type = 'info') {
+            // Create alert element
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                max-width: 400px;
+                word-wrap: break-word;
+            `;
+            
+            // Set colors based on type
+            if (type === 'success') {
+                alert.style.backgroundColor = '#d4edda';
+                alert.style.color = '#155724';
+                alert.style.border = '1px solid #c3e6cb';
+            } else if (type === 'error') {
+                alert.style.backgroundColor = '#f8d7da';
+                alert.style.color = '#721c24';
+                alert.style.border = '1px solid #f5c6cb';
+            } else if (type === 'warning') {
+                alert.style.backgroundColor = '#fff3cd';
+                alert.style.color = '#856404';
+                alert.style.border = '1px solid #ffeaa7';
+            } else {
+                alert.style.backgroundColor = '#d1ecf1';
+                alert.style.color = '#0c5460';
+                alert.style.border = '1px solid #bee5eb';
+            }
+            
+            alert.textContent = message;
+            
+            // Add close button
+            const closeBtn = document.createElement('span');
+            closeBtn.innerHTML = ' &times;';
+            closeBtn.style.cssText = 'float: right; cursor: pointer; font-weight: bold; margin-left: 10px;';
+            closeBtn.onclick = () => document.body.removeChild(alert);
+            alert.appendChild(closeBtn);
+            
+            // Add to page
+            document.body.appendChild(alert);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(alert)) {
+                    document.body.removeChild(alert);
+                }
+            }, 5000);
+        }
+        
         // Start when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {

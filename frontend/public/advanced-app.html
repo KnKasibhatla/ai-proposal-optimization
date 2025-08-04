@@ -352,6 +352,132 @@
             display: none !important;
         }
         
+        /* Tooltip Styles */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .help-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #6c757d;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            margin-left: 8px;
+            cursor: help;
+            vertical-align: middle;
+        }
+        
+        .help-icon:hover {
+            background: #5a6268;
+        }
+        
+        .tooltip {
+            visibility: hidden;
+            width: 250px;
+            background-color: #333;
+            color: white;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .tooltip-container:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Expandable Sections */
+        .expandable-section {
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .expandable-header {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .expandable-header:hover {
+            background: #e9ecef;
+        }
+        
+        .expandable-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .expandable-content.active {
+            display: block;
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+        
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
+        
+        /* Compact Card Style */
+        .compact-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .show-more-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        
+        .show-more-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
         .loading {
             display: inline-block;
             width: 20px;
@@ -546,20 +672,17 @@
                         <div class="grid grid-3">
                             <div class="card metric">
                                 <h4 id="optimal-price">$0</h4>
-                                <p>Optimal Price</p>
-                                <small>AI-recommended bid amount</small>
+                                <p>Optimal Price <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">AI-calculated bid amount that maximizes your expected value based on win probability and profit margin</span></span></p>
                                 <div id="price-model-source" style="margin-top: 8px; font-size: 11px; color: #6c757d;"></div>
                             </div>
                             <div class="card metric">
                                 <h4 id="win-probability">0%</h4>
-                                <p>Win Probability</p>
-                                <small>Chance of winning with this bid</small>
+                                <p>Win Probability <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Likelihood of winning the bid at the recommended price, based on historical patterns and market analysis</span></span></p>
                                 <div id="probability-model-source" style="margin-top: 8px; font-size: 11px; color: #6c757d;"></div>
                             </div>
                             <div class="card metric">
                                 <h4 id="expected-value">$0</h4>
-                                <p>Expected Value</p>
-                                <small>Price × Win Probability</small>
+                                <p>Expected Value <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Statistical value of the bid (Price × Win Probability). Higher values indicate better risk-adjusted opportunities</span></span></p>
                                 <div id="value-model-source" style="margin-top: 8px; font-size: 11px; color: #6c757d;"></div>
                             </div>
                         </div>
@@ -2276,32 +2399,41 @@
             const positiveFactors = [
                 {
                     rank: 1,
-                    feature: 'CLIENT RELATIONSHIP_SCORE',
+                    feature: 'CLIENT RELATIONSHIP',
                     contribution: 0.3654,
-                    explanation: 'Strong client relationship score of -2.33 contributes +0.365 to win probability'
+                    explanation: 'Strong relationship history'
                 },
                 {
                     rank: 2,
                     feature: 'DELIVERY TIME',
                     contribution: 0.5331,
-                    explanation: 'Favorable delivery time of -1.54 provides significant advantage (+0.533)'
+                    explanation: 'Fast delivery capability'
                 },
                 {
                     rank: 3,
                     feature: 'QUALITY SCORE',
                     contribution: 0.2050,
-                    explanation: 'Quality score of -6.07 contributes +0.205 to prediction confidence'
+                    explanation: 'High quality rating'
                 }
             ];
             
+            // Create compact table view
+            positiveHtml += '<table style="width: 100%; font-size: 13px;">';
+            positiveHtml += '<thead><tr style="background: #d4edda;">';
+            positiveHtml += '<th style="padding: 8px;">Factor</th>';
+            positiveHtml += '<th style="padding: 8px; text-align: center;">Impact</th>';
+            positiveHtml += '<th style="padding: 8px;">Reason</th>';
+            positiveHtml += '</tr></thead><tbody>';
+            
             positiveFactors.forEach(function(factor) {
-                positiveHtml += '<div class="alert alert-success">';
-                positiveHtml += '<strong>#' + factor.rank + ': ' + factor.feature + '</strong><br>';
-                positiveHtml += '<small>Contribution: +' + factor.contribution.toFixed(4) + '</small><br>';
-                positiveHtml += '<em>' + factor.explanation + '</em>';
-                positiveHtml += '</div>';
+                positiveHtml += '<tr>';
+                positiveHtml += '<td style="padding: 6px; font-weight: 500;">' + factor.feature + '</td>';
+                positiveHtml += '<td style="padding: 6px; text-align: center; color: #28a745; font-weight: bold;">+' + (factor.contribution * 100).toFixed(1) + '%</td>';
+                positiveHtml += '<td style="padding: 6px; font-size: 12px;">' + factor.explanation + '</td>';
+                positiveHtml += '</tr>';
             });
             
+            positiveHtml += '</tbody></table>';
             document.getElementById('positive-factors').innerHTML = positiveHtml;
         }
         
@@ -2313,32 +2445,41 @@
             const negativeFactors = [
                 {
                     rank: 1,
-                    feature: 'COMPETITION INTENSITY',
+                    feature: 'COMPETITION',
                     contribution: -0.0444,
-                    explanation: 'Competition intensity of -5% decreases difficulty'
+                    explanation: 'High competition level'
                 },
                 {
                     rank: 2,
-                    feature: 'MARKET WIN_RATE',
+                    feature: 'MARKET RATE',
                     contribution: -0.0371,
-                    explanation: 'Market Win Rate value of 0.682 contributes -0.037 to the prediction'
+                    explanation: 'Below market average'
                 },
                 {
                     rank: 3,
-                    feature: 'CLIENT BID_COUNT',
+                    feature: 'BID COUNT',
                     contribution: -0.0222,
-                    explanation: 'Client Bid Count value of 2.612 contributes -0.022 to the prediction'
+                    explanation: 'Limited bid history'
                 }
             ];
             
+            // Create compact table view
+            negativeHtml += '<table style="width: 100%; font-size: 13px;">';
+            negativeHtml += '<thead><tr style="background: #f8d7da;">';
+            negativeHtml += '<th style="padding: 8px;">Factor</th>';
+            negativeHtml += '<th style="padding: 8px; text-align: center;">Impact</th>';
+            negativeHtml += '<th style="padding: 8px;">Reason</th>';
+            negativeHtml += '</tr></thead><tbody>';
+            
             negativeFactors.forEach(function(factor) {
-                negativeHtml += '<div class="alert alert-danger">';
-                negativeHtml += '<strong>#' + factor.rank + ': ' + factor.feature + '</strong><br>';
-                negativeHtml += '<small>Contribution: ' + factor.contribution.toFixed(4) + '</small><br>';
-                negativeHtml += '<em>' + factor.explanation + '</em>';
-                negativeHtml += '</div>';
+                negativeHtml += '<tr>';
+                negativeHtml += '<td style="padding: 6px; font-weight: 500;">' + factor.feature + '</td>';
+                negativeHtml += '<td style="padding: 6px; text-align: center; color: #dc3545; font-weight: bold;">' + (factor.contribution * 100).toFixed(1) + '%</td>';
+                negativeHtml += '<td style="padding: 6px; font-size: 12px;">' + factor.explanation + '</td>';
+                negativeHtml += '</tr>';
             });
             
+            negativeHtml += '</tbody></table>';
             document.getElementById('negative-factors').innerHTML = negativeHtml;
         }
         
@@ -2409,23 +2550,33 @@
             const expectedValue = optimalPrice.expected_value || 0;
             const baseAmount = parseFloat(document.getElementById('base-amount').value) || 0;
             
-            // Pricing recommendation - use actual prediction data
+            // Quick summary
             const priceDifference = predictedPrice - baseAmount;
-            const priceAction = priceDifference < 0 ? 'Reduce' : 'Increase';
-            const priceDirection = priceDifference < 0 ? 'to improve competitiveness' : 'to maximize value';
+            const priceAction = priceDifference < 0 ? 'Lower' : 'Raise';
+            const strategyLevel = winProbability > 0.7 ? 'Strong' : winProbability > 0.5 ? 'Moderate' : 'Weak';
             
-            recHtml += '<div class="alert alert-info">';
-            recHtml += '<strong>Pricing:</strong> ' + priceAction + ' price to $' + predictedPrice.toLocaleString() + ' ' + priceDirection + '<br>';
-            recHtml += '<small>' + (priceDifference < 0 ? 'Lower' : 'Higher') + ' price could ' + (priceDifference < 0 ? 'increase' : 'maintain') + ' win probability to ' + (winProbability * 100).toFixed(1) + '%</small>';
+            // Compact key recommendations
+            recHtml += '<div class="compact-card" style="background: #d1ecf1; border-left: 4px solid #0c5460;">';
+            recHtml += '<h5 style="margin-bottom: 10px; color: #0c5460;">🎯 Key Recommendations</h5>';
+            recHtml += '<ul style="margin: 0; padding-left: 20px; list-style: none;">';
+            recHtml += '<li>• <strong>Action:</strong> ' + priceAction + ' bid to $' + predictedPrice.toLocaleString() + '</li>';
+            recHtml += '<li>• <strong>Position:</strong> ' + strategyLevel + ' competitive advantage</li>';
+            recHtml += '<li>• <strong>Success Rate:</strong> ' + (winProbability * 100).toFixed(1) + '% win probability</li>';
+            recHtml += '</ul>';
             recHtml += '</div>';
             
-            // Strategy recommendation - use actual win probability
-            const strategyLevel = winProbability > 0.7 ? 'Excellent' : winProbability > 0.5 ? 'Good' : 'Challenging';
-            const strategyColor = winProbability > 0.7 ? 'success' : winProbability > 0.5 ? 'info' : 'warning';
+            // Detailed analysis (initially hidden)
+            recHtml += '<button class="show-more-btn" onclick="toggleExpandable(\'rec-details\')">Show Detailed Analysis ▼</button>';
+            recHtml += '<div id="rec-details" class="expandable-content" style="margin-top: 10px;">';
             
-            recHtml += '<div class="alert alert-' + strategyColor + '">';
-            recHtml += '<strong>Strategy:</strong> ' + strategyLevel + ' opportunity - ' + (winProbability > 0.5 ? 'good' : 'moderate') + ' chance of winning<br>';
-            recHtml += '<small>Win probability of ' + (winProbability * 100).toFixed(1) + '% indicates ' + (winProbability > 0.7 ? 'strong' : winProbability > 0.5 ? 'moderate' : 'weak') + ' competitive position</small>';
+            // Detailed pricing strategy
+            recHtml += '<h6 style="margin-top: 15px;">💰 Pricing Strategy</h6>';
+            recHtml += '<p>' + (priceDifference < 0 ? 'Lowering' : 'Increasing') + ' your bid by $' + Math.abs(priceDifference).toLocaleString() + ' could ' + (priceDifference < 0 ? 'improve competitiveness' : 'maximize value while maintaining win probability') + '.</p>';
+            
+            // Competitive positioning
+            recHtml += '<h6 style="margin-top: 15px;">🏆 Competitive Positioning</h6>';
+            recHtml += '<p>With ' + (winProbability * 100).toFixed(1) + '% win probability, you have a ' + strategyLevel.toLowerCase() + ' position in this bid.</p>';
+            
             recHtml += '</div>';
             
             // Competitive advantage - based on actual pricing vs base
@@ -2690,15 +2841,15 @@
             
             detailHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
             detailHtml += '<thead><tr style="background: #f8f9fa;">';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Client</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Project</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Our Bid</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Recommended</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Prediction</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Actual Outcome</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Winning Bid</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Model Accurate?</th>';
-            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Analysis</th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Client <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Unique identifier for each client/customer organization</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Project <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Individual project or bid opportunity identifier</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Our Bid <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">The actual bid amount we submitted historically</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Recommended <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">What the AI model would have recommended for this bid</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">AI Prediction <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Win/Loss prediction with confidence percentage</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Actual Outcome <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Whether we actually won or lost this bid</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Winning Bid <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">The actual winning bid amount (if known)</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Model Accurate? <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">✅ = Correct prediction, ❌ = Incorrect prediction</span></span></th>';
+            detailHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Analysis <span class="tooltip-container"><span class="help-icon">?</span><span class="tooltip">Interpretation of the prediction vs actual outcome</span></span></th>';
             detailHtml += '</tr></thead><tbody>';
             
             // Display individual validation records since backend data appears to have issues with project grouping
@@ -4164,6 +4315,41 @@
                     document.body.removeChild(alert);
                 }
             }, 5000);
+        }
+        
+        // Create tooltip helper
+        function createTooltip(text) {
+            return '<span class="help-icon" title="' + text + '">?</span>';
+        }
+        
+        // Create expandable section helper
+        function createExpandableSection(title, content, isExpanded = false) {
+            const id = 'expand-' + Math.random().toString(36).substr(2, 9);
+            return `
+                <div class="expandable-section">
+                    <div class="expandable-header" onclick="toggleExpandable('${id}')">
+                        <span>${title}</span>
+                        <span id="${id}-icon" class="expand-icon">${isExpanded ? '▲' : '▼'}</span>
+                    </div>
+                    <div id="${id}" class="expandable-content ${isExpanded ? 'active' : ''}">
+                        ${content}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Toggle expandable section
+        function toggleExpandable(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                icon.textContent = '▼';
+            } else {
+                content.classList.add('active');
+                icon.textContent = '▲';
+            }
         }
         
         // Toggle Explain AI section

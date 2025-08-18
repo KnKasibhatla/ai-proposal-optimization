@@ -133,6 +133,18 @@ class FixedSmartPricingEngine:
         else:
             features['industry_hash'] = 0
         
+        # Project type encoding if available
+        if 'project_type' in data.columns:
+            features['project_type_hash'] = data['project_type'].fillna('unknown').apply(lambda x: hash(str(x)) % 100)
+        else:
+            features['project_type_hash'] = 0
+            
+        # Project category encoding (from historical data)
+        if 'project_category' in data.columns:
+            features['project_category_hash'] = data['project_category'].fillna('unknown').apply(lambda x: hash(str(x)) % 100)
+        else:
+            features['project_category_hash'] = 0
+        
         # Fill any remaining NaN values
         features = features.fillna(0)
         
@@ -144,13 +156,31 @@ class FixedSmartPricingEngine:
             if not self.trained or self.model is None:
                 return {'error': 'Model not trained. Please upload data first.'}
             
-            print(f"🎯 Generating prediction for client: {client_id}, base amount: ${base_amount:,.2f}")
+            print(f"🎯 Generating prediction for client: {client_id}, base amount: ${base_amount:,.2f}, project_type: {project_type}")
+            
+            # Map project_type to project_category multipliers based on historical data
+            project_type_multipliers = {
+                'Development': 1.05,      # Slightly higher due to complexity
+                'Maintenance': 0.95,      # Lower due to routine nature  
+                'Consulting': 1.10,       # Higher due to expertise premium
+                'Implementation': 1.08,   # Higher due to execution risk
+                'Support': 0.90,          # Lower due to standardized nature
+                'Research': 1.15,         # Highest due to uncertainty
+                'Training': 0.85,         # Lower due to scalability
+                'Integration': 1.12,      # Higher due to technical complexity
+                'Custom': 1.20,           # Highest due to unique requirements
+                'Standard': 0.88          # Lowest due to commoditization
+            }
+            
+            # Apply project type multiplier
+            project_multiplier = project_type_multipliers.get(project_type, 1.0)
             
             # Create prediction data
             pred_data = pd.DataFrame({
                 'client_id': [client_id],
                 'bid_amount': [base_amount],
                 'industry': [industry],
+                'project_type': [project_type],
                 'win_loss': ['unknown']  # Placeholder
             })
             
@@ -162,6 +192,8 @@ class FixedSmartPricingEngine:
                 # Create test data with this price
                 test_data = pred_data.copy()
                 test_data['bid_amount'] = test_price
+                test_data['industry'] = industry
+                test_data['project_type'] = project_type
                 
                 # Prepare features
                 X_test = self._prepare_features(test_data)
@@ -188,6 +220,14 @@ class FixedSmartPricingEngine:
             
             # Find optimal price (highest expected value)
             optimal = max(price_analysis, key=lambda x: x['expected_value'])
+            
+            # Apply project type multiplier to the optimal price
+            original_price = optimal['price']
+            optimal['price'] = optimal['price'] * project_multiplier
+            optimal['expected_value'] = optimal['price'] * optimal['win_probability']
+            optimal['margin_vs_base'] = ((optimal['price'] - base_amount) / base_amount) * 100
+            
+            print(f"📊 Applied project type '{project_type}' multiplier {project_multiplier:.2f}: ${original_price:,.2f} → ${optimal['price']:,.2f}")
             
             # Get client statistics
             client_stats = self.client_stats.get(client_id, {

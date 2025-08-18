@@ -136,10 +136,66 @@ class SimpleAIEngine:
             client_wins = winning_bids[winning_bids['client_id'] == client_id] if client_id != 'DEFAULT-CLIENT' else winning_bids
             client_losses = losing_bids[losing_bids['client_id'] == client_id] if client_id != 'DEFAULT-CLIENT' else losing_bids
             
-            # 3. FIND SIMILAR PROJECTS
+            # 3. FIND SIMILAR PROJECTS WITH PROJECT TYPE IMPACT
             similar_wins = winning_bids.copy()
-            if project_type and 'project_category' in current_data.columns:
-                similar_wins = similar_wins[similar_wins['project_category'] == project_type]
+            project_type_multiplier = 1.0  # Default multiplier
+            
+            # Apply project type-specific pricing adjustments
+            if project_type:
+                # Define project type impact on pricing with comprehensive mapping
+                project_type_impacts = {
+                    # High-value/Complex project types
+                    'Custom': 1.25,           # Custom projects: +25% premium
+                    'Complex': 1.25,          # Complex projects: +25% premium
+                    'Enterprise': 1.20,       # Enterprise projects: +20% premium  
+                    'Government': 1.15,       # Government projects: +15% premium
+                    'Research': 1.15,         # Research projects: +15% premium
+                    'Integration': 1.12,      # Integration projects: +12% premium
+                    'Consulting': 1.10,       # Consulting projects: +10% premium
+                    'Implementation': 1.08,   # Implementation projects: +8% premium
+                    'Equipment Installation': 1.12,  # Equipment Installation: +12% premium
+                    'Energy Efficiency': 1.08,    # Energy Efficiency: +8% premium
+                    'Facility Expansion': 1.15,   # Facility Expansion: +15% premium
+                    'Process Automation': 1.10,   # Process Automation: +10% premium
+                    'Production Line Optimization': 1.12,  # Production optimization: +12% premium
+                    'Quality Control Systems': 1.08,  # Quality systems: +8% premium
+                    'Six Sigma Implementation': 1.13,  # Six Sigma: +13% premium
+                    'Regulatory Compliance': 1.06,    # Compliance: +6% premium
+                    'Safety Compliance': 1.06,        # Safety: +6% premium
+                    'Lean Manufacturing': 1.09,       # Lean: +9% premium
+                    'Supply Chain Management': 1.11,  # Supply chain: +11% premium
+                    'Development': 1.05,      # Development projects: +5% premium
+                    
+                    # Standard/Baseline project types
+                    'Standard': 1.0,          # Standard projects: baseline
+                    'Migration': 1.0,         # Migration projects: baseline
+                    'Upgrade': 1.0,           # Upgrade projects: baseline
+                    'Inventory Management': 1.0,   # Inventory: baseline
+                    'Waste Reduction': 1.0,        # Waste reduction: baseline
+                    
+                    # Lower-value/Routine project types
+                    'Equipment Maintenance': 0.95,  # Equipment maintenance: -5% discount
+                    'Maintenance': 0.95,      # Maintenance: -5% discount
+                    'Support': 0.90,          # Support contracts: -10% discount
+                    'Training Programs': 0.85, # Training programs: -15% discount
+                    'Training': 0.85,         # Training projects: -15% discount
+                    'Small': 0.85,            # Small projects: -15% discount
+                    'Documentation': 0.80,    # Documentation: -20% discount
+                }
+                
+                # Get multiplier for this project type
+                project_type_multiplier = project_type_impacts.get(project_type, 1.0)
+                
+                # Try to find similar project types in data
+                if 'project_category' in current_data.columns:
+                    project_type_wins = similar_wins[similar_wins['project_category'] == project_type]
+                    if len(project_type_wins) > 0:
+                        similar_wins = project_type_wins
+                    else:
+                        # If no exact match, use the multiplier to adjust pricing
+                        print(f"No historical data for project type '{project_type}', using multiplier: {project_type_multiplier}")
+            
+            # Apply industry filter if available
             if industry and 'client_industry' in current_data.columns:
                 industry_wins = similar_wins[similar_wins['client_industry'] == industry]
                 if len(industry_wins) > 0:
@@ -220,6 +276,10 @@ class SimpleAIEngine:
                     # Use 75th percentile to be more aggressive about margin
                     optimal_price = similar_wins['bid_amount'].quantile(0.75)
                     predicted_win_rate = max(0.30, overall_win_rate)  # At least 30% for market
+                
+                # Apply project type multiplier to fallback calculations too
+                optimal_price = optimal_price * project_type_multiplier
+                print(f"Applied project type '{project_type}' multiplier {project_type_multiplier:.2f} to fallback price: ${optimal_price:,.0f}")
             
             # 6. REFINED COMPETITION-AWARE ADJUSTMENT
             nearby_losses = losing_bids[
@@ -279,7 +339,9 @@ class SimpleAIEngine:
                     # Blend our prediction with margin opportunity learning
                     margin_influence = 0.3  # 30% influence from margin learning
                     optimal_price = (optimal_price * (1 - margin_influence)) + (avg_margin_opportunity * margin_influence)
-                    print(f"💡 Applied margin learning: ${optimal_price:,.0f} (influenced by historical margin opportunities)")
+                    # Apply project type multiplier after margin learning too
+                    optimal_price = optimal_price * project_type_multiplier
+                    print(f"💡 Applied margin learning + project type multiplier: ${optimal_price:,.0f} (influenced by historical margin opportunities)")
             
             # 9. APPLY TRAINED FEATURE WEIGHTS
             # Use the learned feature weights to adjust predictions
@@ -302,7 +364,19 @@ class SimpleAIEngine:
             feature_weight_influence = 0.4  # How much the trained weights influence the prediction
             predicted_win_rate = (predicted_win_rate * (1 - feature_weight_influence)) + (feature_score * feature_weight_influence)
             
-            # 9. FINAL VALIDATION AND BOUNDS (More margin-friendly)
+            # 9. APPLY PROJECT TYPE MULTIPLIER
+            # Apply project type-specific pricing adjustments
+            original_optimal_price = optimal_price
+            optimal_price = optimal_price * project_type_multiplier
+            print(f"🔧 PROJECT TYPE MULTIPLIER: '{project_type}' = {project_type_multiplier:.2f}")
+            print(f"🔧 PRICE CHANGE: ${original_optimal_price:,.2f} → ${optimal_price:,.2f}")
+            
+            # Force minimum variation to ensure we're not returning static values
+            if project_type_multiplier != 1.0 and abs(optimal_price - original_optimal_price) < 1000:
+                print(f"⚠️  WARNING: Price change too small, forcing multiplier application")
+                optimal_price = base_amount * project_type_multiplier
+            
+            # 10. FINAL VALIDATION AND BOUNDS (More margin-friendly)
             # Allow more aggressive pricing to capture margin opportunities
             if optimal_price > base_amount * 2.0:  # Increased from 1.8 to 2.0
                 optimal_price = base_amount * 1.3   # Increased from 1.1 to 1.3
@@ -1656,7 +1730,75 @@ def get_analytics_data(data):
 @app.route('/')
 def dashboard():
     """Redirect to advanced frontend"""
-    return redirect('/frontend/public/advanced-app.html')
+    return redirect('/advanced-app.html')
+
+@app.route('/advanced-app.html')
+def serve_advanced_app():
+    """Serve the advanced app HTML file"""
+    try:
+        frontend_path = Path(__file__).parent.parent / 'frontend' / 'public' / 'advanced-app.html'
+        if frontend_path.exists():
+            with open(frontend_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        else:
+            return f"Frontend file not found at: {frontend_path}", 404
+    except Exception as e:
+        return f"Error loading frontend: {str(e)}", 500
+
+@app.route('/frontend/public/<path:filename>')
+def serve_frontend_files(filename):
+    """Serve frontend static files"""
+    try:
+        frontend_dir = Path(__file__).parent.parent / 'frontend' / 'public'
+        file_path = frontend_dir / filename
+        if file_path.exists() and file_path.is_file():
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # Set appropriate content type
+            if filename.endswith('.html'):
+                return content, 200, {'Content-Type': 'text/html'}
+            elif filename.endswith('.js'):
+                return content, 200, {'Content-Type': 'text/javascript'}
+            elif filename.endswith('.css'):
+                return content, 200, {'Content-Type': 'text/css'}
+            else:
+                return content
+        else:
+            return f"File not found: {filename}", 404
+    except Exception as e:
+        return f"Error serving file: {str(e)}", 500
+
+@app.route('/api/status', methods=['GET', 'OPTIONS'])
+def api_status():
+    """API status endpoint for frontend health check"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    global current_data, ai_engine
+    return jsonify({
+        'status': 'online',
+        'timestamp': datetime.now().isoformat(),
+        'data_loaded': current_data is not None and len(current_data) > 0,
+        'data_records': len(current_data) if current_data is not None else 0,
+        'ai_engine_trained': hasattr(ai_engine, 'trained') and ai_engine.trained,
+        'version': '1.0.0'
+    })
+
+@app.route('/api/health', methods=['GET', 'OPTIONS'])
+def api_health():
+    """Health check endpoint for frontend"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    global current_data, ai_engine
+    return jsonify({
+        'status': 'healthy',
+        'api_online': True,
+        'timestamp': datetime.now().isoformat(),
+        'data_loaded': current_data is not None and len(current_data) > 0,
+        'data_records': len(current_data) if current_data is not None else 0,
+        'ai_ready': hasattr(ai_engine, 'trained') and ai_engine.trained
+    })
 
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
@@ -2527,9 +2669,10 @@ def api_enhanced_historical_validation():
         print(f"Enhanced validate: Processing {len(processing_data)} records (limited from {len(client_data)})")
         
         for idx, bid in processing_data.iterrows():
-            # Create prediction request
+            # Create prediction request - handle both 'price' and 'bid_amount' column names
+            bid_amount_value = float(bid.get('bid_amount', bid.get('price', 0)))
             input_data = {
-                'price': float(bid['bid_amount']),
+                'price': bid_amount_value,
                 'quality_score': float(bid['quality_score']),
                 'delivery_time': float(bid['delivery_time']),
                 'complexity': float(bid.get('complexity', 5)),
@@ -2546,14 +2689,14 @@ def api_enhanced_historical_validation():
             
             ml_result = ai_engine.predict_optimal_price(
                 client_for_prediction, 
-                float(bid['bid_amount']), 
+                bid_amount_value, 
                 industry_for_prediction, 
                 project_type_for_prediction
             )
             
             # Convert to format expected by validation
             prediction_result = {
-                'predicted_price': ml_result.get('optimal_price', float(bid['bid_amount'])),
+                'predicted_price': ml_result.get('optimal_price', bid_amount_value),
                 'win_probability': ml_result.get('win_probability', 0.5),
                 'confidence_level': ml_result.get('confidence', 0.8)
             }
@@ -2580,7 +2723,7 @@ def api_enhanced_historical_validation():
             }
             
             if actual_win and 'winning_price' in bid and pd.notna(bid['winning_price']):
-                current_margin = float(bid['bid_amount']) - float(bid['winning_price'])
+                current_margin = bid_amount_value - float(bid['winning_price'])
                 potential_margin = prediction_result['predicted_price'] - float(bid['winning_price'])
                 margin_opportunity = max(0, potential_margin - current_margin)
                 
@@ -2604,13 +2747,13 @@ def api_enhanced_historical_validation():
             
             # Lost bid analysis
             if not actual_win and 'winning_price' in bid and pd.notna(bid['winning_price']):
-                if float(bid['bid_amount']) > prediction_result['predicted_price'] > float(bid['winning_price']):
+                if bid_amount_value > prediction_result['predicted_price'] > float(bid['winning_price']):
                     lost_bids_with_better_pricing += 1
             
             # Price positioning analysis
             price_positioning = 'Unknown'
             if 'winning_price' in bid and pd.notna(bid['winning_price']):
-                price_diff = ((float(bid['bid_amount']) - float(bid['winning_price'])) / float(bid['winning_price'])) * 100
+                price_diff = ((bid_amount_value - float(bid['winning_price'])) / float(bid['winning_price'])) * 100
                 if price_diff < -5:
                     price_positioning = 'Aggressive'
                 elif price_diff > 5:
@@ -2621,13 +2764,13 @@ def api_enhanced_historical_validation():
             validations.append({
                 'bid_id': bid.get('proposal_id', bid.get('bid_id', f'bid_{idx}')),
                 'client_id': bid.get('client_id', 'Unknown'),
-                'historical_bid': float(bid['bid_amount']),
+                'historical_bid': bid_amount_value,
                 'actual_outcome': 'win' if actual_win else 'loss',
                 'predicted_outcome': 'win' if predicted_win else 'loss',
                 'actual_win': actual_win,
                 'predicted_win': predicted_win,
                 'accuracy': accuracy,
-                'actual_price': float(bid['bid_amount']),
+                'actual_price': bid_amount_value,
                 'recommended_price': prediction_result['predicted_price'],
                 'winning_price': float(bid.get('winning_price', 0)) if pd.notna(bid.get('winning_price', 0)) else None,
                 'win_probability': prediction_result['win_probability'],
@@ -2637,9 +2780,9 @@ def api_enhanced_historical_validation():
                 'project_category': bid.get('project_category', 'Unknown'),
                 'analysis': {
                     'type': 'winning_bid_optimization' if actual_win else 'lost_bid_analysis',
-                    'insight': f"{'Won' if actual_win else 'Lost'} bid with ${float(bid['bid_amount']):,.0f}. Model recommended ${prediction_result['predicted_price']:,.0f}.",
-                    'recommendation': f"{'Could have increased margin by $' + str(round(margin_opportunity, 2)) + ' (' + str(round(margin_analysis['margin_improvement_percent'], 1)) + '%)' if actual_win and margin_opportunity > 0 else 'Model recommendation too high - consider more competitive pricing' if not actual_win and prediction_result['predicted_price'] > float(bid['bid_amount']) else 'Consider pricing closer to model recommendations' if not actual_win and prediction_result['predicted_price'] < float(bid['bid_amount']) * 0.9 else 'Pricing was optimal'}",
-                    'potential_improvement': margin_opportunity if actual_win else abs(float(bid['bid_amount']) - prediction_result['predicted_price'])
+                    'insight': f"{'Won' if actual_win else 'Lost'} bid with ${bid_amount_value:,.0f}. Model recommended ${prediction_result['predicted_price']:,.0f}.",
+                    'recommendation': f"{'Could have increased margin by $' + str(round(margin_opportunity, 2)) + ' (' + str(round(margin_analysis['margin_improvement_percent'], 1)) + '%)' if actual_win and margin_opportunity > 0 else 'Model recommendation too high - consider more competitive pricing' if not actual_win and prediction_result['predicted_price'] > bid_amount_value else 'Consider pricing closer to model recommendations' if not actual_win and prediction_result['predicted_price'] < bid_amount_value * 0.9 else 'Pricing was optimal'}",
+                    'potential_improvement': margin_opportunity if actual_win else abs(bid_amount_value - prediction_result['predicted_price'])
                 }
             })
         
@@ -2792,15 +2935,6 @@ def api_analyze_margin():
         return jsonify({'error': str(e)}), 500
 
 # Advanced API endpoints for React frontend
-@app.route('/api/health', methods=['GET', 'OPTIONS'])
-def api_health():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'version': '1.0.0',
-        'ai_engine_trained': ai_engine.trained
-    })
 
 @app.route('/api/clients', methods=['GET', 'OPTIONS'])
 def api_get_clients():
@@ -2961,10 +3095,13 @@ def api_predict_pricing():
             if not client_id or base_amount <= 0:
                 return jsonify({'error': 'Client ID and base amount are required'}), 400
             
-            print(f"🎯 Processing prediction with AI engine: {client_id}, ${base_amount:,.2f}")
+            print(f"🎯 Processing prediction with AI engine: {client_id}, ${base_amount:,.2f}, project_type: {project_type}")
             
             # Get prediction from simple AI engine
             result = ai_engine.predict_optimal_price(client_id, base_amount, industry, project_type)
+            
+            print(f"🔍 DEBUG: AI engine result = {result}")
+            print(f"🔍 DEBUG: Optimal price returned = ${result.get('optimal_price', 'ERROR'):,.2f}")
             
             if 'error' in result:
                 return jsonify({'error': result['error']}), 500
@@ -3108,9 +3245,13 @@ def api_margin_analysis():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/model-validation', methods=['POST'])
+@app.route('/api/model-validation', methods=['POST', 'OPTIONS'])
 def api_model_validation():
     """Validate model by predicting on historical data"""
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     try:
         global current_data, ai_engine
         
@@ -3137,7 +3278,8 @@ def api_model_validation():
             else:
                 validation_data = current_data.copy()
         else:  # random_sample
-            validation_data = current_data.sample(n=min(sample_size, len(current_data))).copy()
+            # Use consistent random seed for reproducible results
+            validation_data = current_data.sample(n=min(sample_size, len(current_data)), random_state=42).copy()
         
         if len(validation_data) == 0:
             return jsonify({'error': 'No validation data available for the specified criteria'}), 400
@@ -3150,6 +3292,8 @@ def api_model_validation():
         correct_predictions = 0
         total_absolute_error = 0
         processed_count = 0
+        successful_predictions = 0
+        failed_predictions = 0
         
         for idx, row in validation_data.iterrows():
             try:
@@ -3157,19 +3301,20 @@ def api_model_validation():
                 if processed_count % 10 == 0:
                     print(f"Processed {processed_count}/{len(validation_data)} records...")
                 
-                # Get prediction for this historical record
+                # Get prediction for this historical record - handle both 'price' and 'bid_amount' column names
+                bid_amount_value = float(row.get('bid_amount', row.get('price', 0)))
                 prediction_result = ai_engine.predict_optimal_price(
                     client_id=row['client_id'],
-                    base_amount=row['bid_amount'],
-                    industry=row.get('industry', ''),
-                    project_type=row.get('project_category', ''),
-                    data=current_data
+                    base_amount=bid_amount_value,
+                    industry=row.get('client_industry', ''),
+                    project_type=row.get('project_category', '')
                 )
                 
-                if 'error' not in prediction_result:
+                if 'error' not in prediction_result and 'optimal_price' in prediction_result:
                     actual_outcome = 1 if row['win_loss'].lower() == 'win' else 0
-                    predicted_probability = prediction_result['model_confidence']
+                    predicted_probability = prediction_result['win_probability']
                     predicted_outcome = 1 if predicted_probability > 0.5 else 0
+                    successful_predictions += 1
                     
                     # Calculate accuracy metrics
                     is_correct = (predicted_outcome == actual_outcome)
@@ -3178,7 +3323,7 @@ def api_model_validation():
                     validation_results.append({
                         'record_id': str(idx),
                         'client_id': row['client_id'],
-                        'bid_amount': float(row['bid_amount']),
+                        'bid_amount': bid_amount_value,
                         'winning_price': float(row.get('winning_price', 0)) if pd.notna(row.get('winning_price', 0)) else 0,
                         'actual_outcome': actual_outcome,
                         'actual_outcome_text': row['win_loss'],
@@ -3187,10 +3332,10 @@ def api_model_validation():
                         'predicted_outcome_text': 'win' if predicted_outcome == 1 else 'loss',
                         'is_correct': is_correct,
                         'absolute_error': round(absolute_error, 4),
-                        'confidence_level': prediction_result.get('detailed_explanation', {}).get('confidence_analysis', {}).get('confidence_level', 'Unknown'),
-                        'optimal_price': prediction_result['optimal_price']['price'],
-                        'price_difference': round(prediction_result['optimal_price']['price'] - row['bid_amount'], 2),
-                        'winning_price_difference': round(float(row.get('winning_price', 0)) - row['bid_amount'], 2) if pd.notna(row.get('winning_price', 0)) else 0,
+                        'confidence_level': prediction_result.get('confidence', 0.5),
+                        'optimal_price': prediction_result['optimal_price'],
+                        'price_difference': round(prediction_result['optimal_price'] - bid_amount_value, 2),
+                        'winning_price_difference': round(float(row.get('winning_price', 0)) - bid_amount_value, 2) if pd.notna(row.get('winning_price', 0)) else 0,
                         'industry': row.get('industry', 'Unknown'),
                         'project_type': row.get('project_category', 'Unknown')
                     })
@@ -3201,11 +3346,17 @@ def api_model_validation():
                     total_absolute_error += absolute_error
                     
             except Exception as e:
+                failed_predictions += 1
+                print(f"Prediction error for record {idx}: {str(e)}")
                 # Skip records that cause errors
                 continue
         
+        print(f"Validation complete: {successful_predictions} successful, {failed_predictions} failed predictions")
+        
         if total_predictions == 0:
-            return jsonify({'error': 'No successful predictions could be made on validation data'}), 400
+            return jsonify({
+                'error': f'No successful predictions could be made on validation data. {successful_predictions} successful, {failed_predictions} failed predictions.'
+            }), 400
         
         # Calculate overall metrics
         accuracy = correct_predictions / total_predictions

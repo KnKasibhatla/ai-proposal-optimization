@@ -308,6 +308,16 @@
             transform: translateY(-1px);
         }
         
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #6c757d;
+        }
+        
+        .btn-sm:hover {
+            background: #5a6268;
+        }
+        
         .btn-row {
             display: flex;
             gap: 10px;
@@ -537,7 +547,12 @@
         <div class="header">
             <h1>🚀 Advanced AI Proposal Optimization Platform</h1>
             <p>Intelligent bidding powered by machine learning</p>
-            <div id="api-status">Checking connection...</div>
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                <div id="api-status">Checking connection...</div>
+                <button id="refresh-data-btn" class="btn btn-sm" onclick="refreshAllData()" title="Refresh all cached data">
+                    🔄 Refresh Data
+                </button>
+            </div>
         </div>
         
         <div class="nav-tabs">
@@ -939,24 +954,28 @@
             <h2>✅ Model Validation & Testing</h2>
             <div class="grid grid-2">
                 <div class="card">
-                    <h3>🔬 Validation Settings</h3>
+                    <h3>🔬 Test Your AI Model</h3>
                     <div class="form-group">
-                        <label for="validation-type">Validation Type:</label>
+                        <label for="validation-type">What kind of test would you like to run?</label>
                         <select id="validation-type" class="form-control">
-                            <option value="cross_validation">Cross Validation</option>
-                            <option value="holdout">Holdout Validation</option>
-                            <option value="time_series">Time Series Split</option>
+                            <option value="cross_validation">🎲 Random Sample Test - Quick validation using random historical bids</option>
+                            <option value="holdout">📊 Complete Data Test - Comprehensive test using all your data</option>
+                            <option value="time_series">📈 Time-Based Test - Test how AI performs over time periods</option>
                         </select>
+                        <small class="help-text">Choose how you want to test your AI's accuracy</small>
                     </div>
                     <div class="form-group">
-                        <label for="sample-size">Sample Size:</label>
-                        <input type="range" id="sample-size" class="form-control" min="5" max="100" value="20">
-                        <small>Number of historical records to test (5-100): <span id="sample-size-value">20</span></small>
+                        <label for="sample-size">How many bids to test:</label>
+                        <input type="range" id="sample-size" class="form-control" min="5" max="100" value="50" oninput="document.getElementById('sample-size-value').textContent = this.value">
+                        <small class="help-text">Test with <span id="sample-size-value">50</span> historical bids (more = more accurate results)</small>
                     </div>
-                    <button class="btn btn-primary" id="run-validation-btn">
-                        <span id="validation-btn-text">🔬 Run Model Validation</span>
-                        <span id="validation-loading" class="loading hidden"></span>
+                    <button class="btn btn-primary" id="run-validation-btn" onclick="runValidation()">
+                        <span id="validation-btn-text">🚀 Test AI Accuracy</span>
+                        <span id="validation-loading" class="loading hidden">Testing...</span>
                     </button>
+                    <div class="help-box" style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-radius: 6px;">
+                        <strong>💡 What happens:</strong> We'll check how well our AI would have predicted your past bid outcomes
+                    </div>
                 </div>
                 
                 <div class="card">
@@ -999,6 +1018,12 @@
                 <div class="card">
                     <h3>🎯 Confusion Matrix</h3>
                     <div id="confusion-matrix"></div>
+                </div>
+                
+                <!-- Historical Data Validation Table -->
+                <div class="card">
+                    <h3>📊 Historical Data Validation - Predictions vs Actual Outcomes</h3>
+                    <div id="historical-validation-table"></div>
                 </div>
                 
                 <!-- Client Performance -->
@@ -1361,8 +1386,71 @@
         
         // Dynamic API URL detection for production deployment
         const API_BASE_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5000' 
+            ? 'http://localhost:5001' 
             : 'https://ai-proposal-optimization.onrender.com';
+        
+        // Global Data Store for Consistency
+        const GlobalDataStore = {
+            // Core data
+            stats: null,
+            clients: null,
+            featureImportance: null,
+            modelMetrics: null,
+            learningMetrics: null,
+            lastValidationResults: null,
+            
+            // Timestamps for cache management
+            timestamps: {
+                stats: 0,
+                clients: 0,
+                featureImportance: 0,
+                modelMetrics: 0,
+                learningMetrics: 0,
+                validation: 0
+            },
+            
+            // Cache duration (5 minutes)
+            CACHE_DURATION: 5 * 60 * 1000,
+            
+            // Check if data needs refresh
+            needsRefresh(dataType) {
+                const now = Date.now();
+                const lastUpdate = this.timestamps[dataType] || 0;
+                return (now - lastUpdate) > this.CACHE_DURATION;
+            },
+            
+            // Update data and timestamp
+            updateData(dataType, data) {
+                this[dataType] = data;
+                this.timestamps[dataType] = Date.now();
+                console.log(`📊 Updated ${dataType} in global store`);
+            },
+            
+            // Clear all data (after upload or model changes)
+            clearAll() {
+                console.log('🔄 Clearing all cached data');
+                this.stats = null;
+                this.clients = null;
+                this.featureImportance = null;
+                this.modelMetrics = null;
+                this.learningMetrics = null;
+                this.lastValidationResults = null;
+                Object.keys(this.timestamps).forEach(key => {
+                    this.timestamps[key] = 0;
+                });
+            },
+            
+            // Clear specific data types
+            clearModelData() {
+                console.log('🔄 Clearing model-related data');
+                this.modelMetrics = null;
+                this.learningMetrics = null;
+                this.lastValidationResults = null;
+                this.timestamps.modelMetrics = 0;
+                this.timestamps.learningMetrics = 0;
+                this.timestamps.validation = 0;
+            }
+        };
         
         // Simple, bulletproof panel switching
         function showPanel(panelName) {
@@ -1423,21 +1511,74 @@
                     }
                 });
             }
+            
+            // Add data refresh check
+            refreshTabData(panelName);
+        }
+        
+        // Centralized data refresh function
+        async function refreshTabData(panelName) {
+            console.log(`🔄 Refreshing data for ${panelName} tab`);
+            
+            try {
+                switch(panelName) {
+                    case 'dashboard':
+                        await loadDashboardWithCache();
+                        break;
+                    case 'pricing':
+                        await loadClientsWithCache();
+                        break;
+                    case 'features':
+                        await loadFeatureImportanceWithCache();
+                        break;
+                    case 'training':
+                        await loadModelMetricsWithCache();
+                        break;
+                    case 'learning':
+                        await loadLearningMetricsWithCache();
+                        break;
+                    case 'validation':
+                        // Always refresh validation data as it's critical
+                        GlobalDataStore.clearModelData();
+                        break;
+                    case 'competitors':
+                        await loadClientsWithCache();
+                        break;
+                }
+            } catch (error) {
+                console.error(`Error refreshing ${panelName} data:`, error);
+            }
         }
         
         // Load dashboard data
-        async function loadDashboard() {
+        async function loadDashboardWithCache() {
+            if (GlobalDataStore.stats && !GlobalDataStore.needsRefresh('stats')) {
+                console.log('📊 Using cached dashboard data');
+                displayDashboardData(GlobalDataStore.stats);
+                return;
+            }
+            
             try {
                 const response = await fetch(API_BASE_URL + '/api/stats');
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('total-proposals').textContent = data.total_proposals || 0;
-                    document.getElementById('win-rate').textContent = ((data.win_rate || 0) * 100).toFixed(1) + '%';
-                    document.getElementById('avg-score').textContent = (data.avg_score || 0).toFixed(1);
+                    GlobalDataStore.updateData('stats', data);
+                    displayDashboardData(data);
                 }
             } catch (error) {
                 console.log('Dashboard load error:', error);
             }
+        }
+        
+        function displayDashboardData(data) {
+            document.getElementById('total-proposals').textContent = data.total_proposals || 0;
+            document.getElementById('win-rate').textContent = ((data.win_rate || 0) * 100).toFixed(1) + '%';
+            document.getElementById('avg-score').textContent = (data.avg_score || 0).toFixed(1);
+        }
+        
+        // Legacy function - now uses cached version
+        async function loadDashboard() {
+            await loadDashboardWithCache();
         }
         
         // Load clients for pricing
@@ -1487,6 +1628,192 @@
                 }
             } catch (error) {
                 console.log('Client load error:', error);
+            }
+        }
+        
+        // Cached version of loadClients
+        async function loadClientsWithCache() {
+            if (GlobalDataStore.clients && !GlobalDataStore.needsRefresh('clients')) {
+                console.log('👥 Using cached client data');
+                displayClientData(GlobalDataStore.clients);
+                return GlobalDataStore.clients;
+            }
+            
+            try {
+                console.log('Loading clients from API...');
+                const response = await fetch(API_BASE_URL + '/api/clients');
+                if (response.ok) {
+                    const data = await response.json();
+                    GlobalDataStore.updateData('clients', data);
+                    displayClientData(data);
+                    return data;
+                }
+            } catch (error) {
+                console.log('Client load error:', error);
+            }
+            return null;
+        }
+        
+        function displayClientData(data) {
+            // Populate client dropdown
+            const clientSelect = document.getElementById('client-select');
+            if (clientSelect && data.clients) {
+                clientSelect.innerHTML = '<option value="">Select a client...</option>';
+                data.clients.forEach(function(client) {
+                    const option = document.createElement('option');
+                    option.value = client.client_id;
+                    option.textContent = client.client_id + ' (Win Rate: ' + (client.win_rate * 100).toFixed(1) + '%)';
+                    clientSelect.appendChild(option);
+                });
+                console.log('Clients populated:', data.clients.length);
+            }
+            
+            // Populate industry dropdown
+            const industrySelect = document.getElementById('industry-select');
+            if (industrySelect && data.industries) {
+                industrySelect.innerHTML = '<option value="">Select industry...</option>';
+                data.industries.forEach(function(industry) {
+                    const option = document.createElement('option');
+                    option.value = industry;
+                    option.textContent = industry;
+                    industrySelect.appendChild(option);
+                });
+            }
+            
+            // Populate project type dropdown
+            const projectTypeSelect = document.getElementById('project-type-select');
+            if (projectTypeSelect && data.project_types) {
+                projectTypeSelect.innerHTML = '<option value="">Select project type...</option>';
+                data.project_types.forEach(function(projectType) {
+                    const option = document.createElement('option');
+                    option.value = projectType;
+                    option.textContent = projectType;
+                    projectTypeSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Feature importance cached loading
+        async function loadFeatureImportanceWithCache() {
+            if (GlobalDataStore.featureImportance && !GlobalDataStore.needsRefresh('featureImportance')) {
+                console.log('🎯 Using cached feature importance data');
+                displayFeatureImportance(GlobalDataStore.featureImportance);
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE_URL + '/api/feature-importance');
+                if (response.ok) {
+                    const data = await response.json();
+                    GlobalDataStore.updateData('featureImportance', data);
+                    displayFeatureImportance(data);
+                }
+            } catch (error) {
+                console.log('Feature importance load error:', error);
+            }
+        }
+        
+        function displayFeatureImportance(data) {
+            const container = document.getElementById('feature-list');
+            if (container && data.features) {
+                container.innerHTML = '';
+                data.features.forEach(function(feature) {
+                    const featureDiv = document.createElement('div');
+                    featureDiv.className = 'feature-item';
+                    featureDiv.innerHTML = `
+                        <span class="feature-name">${feature.name}</span>
+                        <div class="feature-bar">
+                            <div class="feature-bar-fill" style="width: ${(feature.importance * 100)}%"></div>
+                        </div>
+                        <span class="feature-value">${(feature.importance * 100).toFixed(1)}%</span>
+                    `;
+                    container.appendChild(featureDiv);
+                });
+            }
+        }
+        
+        // Model metrics cached loading
+        async function loadModelMetricsWithCache() {
+            if (GlobalDataStore.modelMetrics && !GlobalDataStore.needsRefresh('modelMetrics')) {
+                console.log('📊 Using cached model metrics');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE_URL + '/api/model/quick-metrics');
+                if (response.ok) {
+                    const data = await response.json();
+                    GlobalDataStore.updateData('modelMetrics', data);
+                }
+            } catch (error) {
+                console.log('Model metrics load error:', error);
+            }
+        }
+        
+        // Learning metrics cached loading
+        async function loadLearningMetricsWithCache() {
+            if (GlobalDataStore.learningMetrics && !GlobalDataStore.needsRefresh('learningMetrics')) {
+                console.log('🧠 Using cached learning metrics');
+                displayLearningMetrics(GlobalDataStore.learningMetrics);
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE_URL + '/api/model/learning-metrics');
+                if (response.ok) {
+                    const data = await response.json();
+                    GlobalDataStore.updateData('learningMetrics', data);
+                    displayLearningMetrics(data);
+                }
+            } catch (error) {
+                console.log('Learning metrics load error:', error);
+            }
+        }
+        
+        function displayLearningMetrics(data) {
+            if (data.current_accuracy !== undefined) {
+                const accuracyEl = document.getElementById('current-accuracy');
+                if (accuracyEl) accuracyEl.textContent = (data.current_accuracy * 100).toFixed(1) + '%';
+            }
+            
+            if (data.prediction_count !== undefined) {
+                const countEl = document.getElementById('total-predictions');
+                if (countEl) countEl.textContent = data.prediction_count;
+            }
+            
+            if (data.recent_accuracy !== undefined) {
+                const recentEl = document.getElementById('recent-accuracy');
+                if (recentEl) recentEl.textContent = (data.recent_accuracy * 100).toFixed(1) + '%';
+            }
+        }
+        
+        // Manual data refresh function
+        async function refreshAllData() {
+            const refreshBtn = document.getElementById('refresh-data-btn');
+            const originalText = refreshBtn.innerHTML;
+            
+            try {
+                refreshBtn.innerHTML = '⏳ Refreshing...';
+                refreshBtn.disabled = true;
+                
+                // Clear all cached data
+                GlobalDataStore.clearAll();
+                console.log('🔄 Manual refresh: Cleared all cached data');
+                
+                // Refresh current tab data
+                const activeTab = document.querySelector('.nav-tab.active');
+                if (activeTab) {
+                    const panelName = activeTab.getAttribute('data-panel');
+                    await refreshTabData(panelName);
+                }
+                
+                console.log('✅ Manual refresh completed');
+                
+            } catch (error) {
+                console.error('Error during manual refresh:', error);
+            } finally {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
             }
         }
         
@@ -1622,6 +1949,12 @@
                     '<p><strong>Status:</strong> ' + (result.message || 'Success') + '</p>' +
                     '<p><strong>Win Rate:</strong> ' + ((result.win_rate || 0) * 100).toFixed(1) + '%</p>' +
                     '</div>';
+                
+                // Clear all cached data since new data was uploaded
+                GlobalDataStore.clearAll();
+                console.log('🔄 Cleared all cached data after upload');
+                
+                // Refresh dashboard with new data
                 loadDashboard();
                 
             } catch (error) {
@@ -2633,10 +2966,10 @@
         }
         
         
-        // Run Model Validation - ENHANCED with rich data
+        // Run Model Validation - REAL API CALL with business-friendly results
         async function runValidation() {
             const validationType = document.getElementById('validation-type').value;
-            const sampleSize = document.getElementById('sample-size').value;
+            const sampleSize = parseInt(document.getElementById('sample-size').value);
             
             const validationBtn = document.getElementById('validation-btn-text');
             const validationLoading = document.getElementById('validation-loading');
@@ -2646,112 +2979,474 @@
             validationLoading.classList.remove('hidden');
             
             try {
-                // Simulate comprehensive validation analysis
-                setTimeout(async function() {
-                    validationResults.classList.remove('hidden');
-                    
-                    // Update main metrics with corrected values
-                    document.getElementById('accuracy-score').textContent = '65.0%';
-                    document.getElementById('precision-score').textContent = '72.2%';
-                    document.getElementById('recall-score').textContent = '81.3%';
-                    document.getElementById('f1-score').textContent = '76.5%';
-                    
-                    // Display confusion matrix
-                    displayConfusionMatrix();
-                    
-                    // Display client performance
-                    displayClientPerformance();
-                    
-                    // Display detailed results - NOW WITH AWAIT
-                    await displayDetailedValidationResults();
-                    
-                    // Display model insights - NOW WITH AWAIT
-                    await displayModelInsights();
-                    
-                    validationBtn.style.display = 'inline';
-                    validationLoading.classList.add('hidden');
-                }, 3000);
+                console.log(`Running ${validationType} validation with ${sampleSize} samples...`);
+                
+                // Map frontend validation type to backend API format
+                const apiValidationType = getAPIValidationType(validationType);
+                
+                const response = await fetch(`${API_BASE_URL}/api/model-validation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        validation_type: apiValidationType,
+                        sample_size: sampleSize
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const validationData = await response.json();
+                console.log('Validation results:', validationData);
+                
+                if (validationData.error) {
+                    throw new Error(validationData.error);
+                }
+                
+                // Display results using real data
+                displayValidationResults(validationData, validationType);
+                validationResults.classList.remove('hidden');
+                
             } catch (error) {
-                console.log('Validation error:', error);
+                console.error('Validation error:', error);
+                showAlert(`Validation failed: ${error.message}`, 'error');
+                
+                // Show helpful message for business users
+                const errorHtml = `
+                    <div class="alert alert-warning">
+                        <h4>⚠️ Validation Couldn't Run</h4>
+                        <p><strong>Issue:</strong> ${error.message}</p>
+                        <p><strong>Solution:</strong> Please ensure you have uploaded historical bidding data first.</p>
+                        <p><strong>Need Help?</strong> Go to the Data Upload tab and upload your CSV file with historical bid results.</p>
+                    </div>
+                `;
+                document.getElementById('validation-overview').innerHTML = errorHtml;
+            } finally {
                 validationBtn.style.display = 'inline';
                 validationLoading.classList.add('hidden');
             }
         }
         
-        // Display Confusion Matrix - CORRECTED
-        function displayConfusionMatrix() {
-            let matrixHtml = '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
-            matrixHtml += '<thead>';
-            matrixHtml += '<tr><th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa;"></th>';
-            matrixHtml += '<th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa; text-align: center;">Predicted Win</th>';
-            matrixHtml += '<th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa; text-align: center;">Predicted Loss</th></tr>';
-            matrixHtml += '</thead><tbody>';
-            matrixHtml += '<tr>';
-            matrixHtml += '<td style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;">Actual Win</td>';
-            matrixHtml += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #d4edda;">9</td>';
-            matrixHtml += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f8d7da;">2</td>';
-            matrixHtml += '</tr>';
-            matrixHtml += '<tr>';
-            matrixHtml += '<td style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;">Actual Loss</td>';
-            matrixHtml += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f8d7da;">4</td>';
-            matrixHtml += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #d4edda;">5</td>';
-            matrixHtml += '</tr>';
-            matrixHtml += '</tbody></table>';
-            matrixHtml += '<p><strong>Summary:</strong> 14 correct out of 20 predictions (70% accuracy)</p>';
-            matrixHtml += '<div class="alert alert-info" style="margin-top: 10px;">';
-            matrixHtml += '<p><strong>Interpretation:</strong></p>';
-            matrixHtml += '<p>• <strong>True Positives (9):</strong> Correctly predicted wins</p>';
-            matrixHtml += '<p>• <strong>True Negatives (5):</strong> Correctly predicted losses</p>';
-            matrixHtml += '<p>• <strong>False Positives (4):</strong> Predicted win but actually lost</p>';
-            matrixHtml += '<p>• <strong>False Negatives (2):</strong> Predicted loss but actually won</p>';
-            matrixHtml += '</div>';
-            
-            document.getElementById('confusion-matrix').innerHTML = matrixHtml;
+        // Map user-friendly validation types to API types
+        function getAPIValidationType(frontendType) {
+            const mapping = {
+                'cross_validation': 'random_sample',
+                'holdout': 'all_data', 
+                'time_series': 'random_sample'
+            };
+            return mapping[frontendType] || 'random_sample';
         }
         
-        // Display Client Performance
-        function displayClientPerformance() {
-            let perfHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
+        // Display business-friendly validation results using real API data
+        function displayValidationResults(validationData, validationType) {
+            const summary = validationData.validation_summary;
+            
+            // Update main metrics with real data
+            document.getElementById('accuracy-score').textContent = `${(summary.accuracy * 100).toFixed(1)}%`;
+            document.getElementById('precision-score').textContent = `${(summary.precision * 100).toFixed(1)}%`;
+            document.getElementById('recall-score').textContent = `${(summary.recall * 100).toFixed(1)}%`;
+            document.getElementById('f1-score').textContent = `${(summary.f1_score * 100).toFixed(1)}%`;
+            
+            // Update validation overview with business explanation
+            const overviewHtml = `
+                <div class="validation-summary">
+                    <h4>📋 ${getValidationTypeLabel(validationType)} Results</h4>
+                    <p><strong>What we tested:</strong> ${summary.total_predictions} historical bids from your data</p>
+                    <p><strong>How we tested:</strong> ${getValidationExplanation(validationType)}</p>
+                    
+                    <div class="business-metrics" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <h5>💼 What This Means for Your Business:</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                            <div>
+                                <strong>🎯 Prediction Accuracy:</strong> ${(summary.accuracy * 100).toFixed(1)}%<br>
+                                <small>${getAccuracyInterpretation(summary.accuracy)}</small>
+                            </div>
+                            <div>
+                                <strong>💰 Win Prediction Quality:</strong> ${(summary.precision * 100).toFixed(1)}%<br>
+                                <small>${getPrecisionInterpretation(summary.precision)}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('validation-overview').innerHTML = overviewHtml;
+            
+            // Display business-friendly client performance
+            displayBusinessClientPerformance(validationData.client_performance || []);
+            
+            // Display historical validation table with predictions vs actual outcomes
+            displayHistoricalValidationTable(validationData);
+            
+            // Display detailed results in business terms - use detailed_results from API
+            displayBusinessValidationDetails(validationData.detailed_results || validationData.validation_results || [], validationType);
+        }
+        
+        // Display Historical Validation Table - Predictions vs Actual Outcomes
+        function displayHistoricalValidationTable(validationData) {
+            const container = document.getElementById('historical-validation-table');
+            
+            // Check for data in either detailed_results or validations field
+            const validationResults = validationData.detailed_results || validationData.validations || [];
+            
+            if (!validationData || validationResults.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h5>📊 No Historical Data Available</h5>
+                        <p>Upload your historical bidding data to see how well the AI model predicts your bid outcomes.</p>
+                        <p>Required columns: client_id, bid_amount, win_loss, winning_price</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Build comprehensive validation table
+            let tableHtml = '<div style="overflow-x: auto;">';
+            
+            // Add summary statistics at the top
+            const totalRecords = validationResults.length;
+            const correctPredictions = validationResults.filter(r => r.is_correct).length;
+            const accuracy = totalRecords > 0 ? (correctPredictions / totalRecords * 100).toFixed(1) : 0;
+            
+            // Calculate performance metrics
+            const truePositives = validationResults.filter(r => 
+                r.actual_outcome === 1 && r.predicted_outcome === 1).length;
+            const falsePositives = validationResults.filter(r => 
+                r.actual_outcome === 0 && r.predicted_outcome === 1).length;
+            const trueNegatives = validationResults.filter(r => 
+                r.actual_outcome === 0 && r.predicted_outcome === 0).length;
+            const falseNegatives = validationResults.filter(r => 
+                r.actual_outcome === 1 && r.predicted_outcome === 0).length;
+            
+            const precision = (truePositives + falsePositives) > 0 
+                ? ((truePositives / (truePositives + falsePositives)) * 100).toFixed(1) 
+                : 0;
+            const recall = (truePositives + falseNegatives) > 0 
+                ? ((truePositives / (truePositives + falseNegatives)) * 100).toFixed(1) 
+                : 0;
+            
+            // Summary metrics
+            tableHtml += '<div class="alert alert-info" style="margin-bottom: 20px;">';
+            tableHtml += '<h5>Performance Summary</h5>';
+            tableHtml += '<div class="row">';
+            tableHtml += '<div class="col-md-3"><strong>Overall Accuracy:</strong> ' + accuracy + '%</div>';
+            tableHtml += '<div class="col-md-3"><strong>Precision:</strong> ' + precision + '%</div>';
+            tableHtml += '<div class="col-md-3"><strong>Recall:</strong> ' + recall + '%</div>';
+            tableHtml += '<div class="col-md-3"><strong>Total Validations:</strong> ' + totalRecords + '</div>';
+            tableHtml += '</div>';
+            tableHtml += '</div>';
+            
+            // Create the main validation table
+            tableHtml += '<table class="table table-striped table-hover" style="font-size: 13px;">';
+            tableHtml += '<thead class="thead-dark">';
+            tableHtml += '<tr>';
+            tableHtml += '<th>Client ID</th>';
+            tableHtml += '<th>Project</th>';
+            tableHtml += '<th>Historical Bid</th>';
+            tableHtml += '<th>AI Recommended</th>';
+            tableHtml += '<th>Win Probability</th>';
+            tableHtml += '<th>Predicted Outcome</th>';
+            tableHtml += '<th>Actual Outcome</th>';
+            tableHtml += '<th>Winning Bid</th>';
+            tableHtml += '<th>Accuracy</th>';
+            tableHtml += '<th>Margin Opportunity</th>';
+            tableHtml += '<th>Analysis</th>';
+            tableHtml += '</tr>';
+            tableHtml += '</thead>';
+            tableHtml += '<tbody>';
+            
+            // Limit display to first 50 records for performance
+            const displayLimit = 50;
+            const recordsToShow = validationResults.slice(0, displayLimit);
+            
+            recordsToShow.forEach(function(result) {
+                const actualWin = result.actual_outcome === 1 || result.actual_outcome === 'win';
+                const predictedWin = result.predicted_outcome === 1 || result.predicted_outcome === 'win';
+                const isCorrect = result.is_correct !== undefined ? result.is_correct : (actualWin === predictedWin);
+                
+                // Determine row styling based on accuracy
+                let rowClass = '';
+                if (isCorrect && actualWin) {
+                    rowClass = 'table-success'; // Correctly predicted win
+                } else if (isCorrect && !actualWin) {
+                    rowClass = 'table-secondary'; // Correctly predicted loss
+                } else if (!isCorrect && actualWin) {
+                    rowClass = 'table-warning'; // Missed opportunity (false negative)
+                } else {
+                    rowClass = 'table-danger'; // False positive
+                }
+                
+                tableHtml += '<tr class="' + rowClass + '">';
+                
+                // Client ID
+                tableHtml += '<td><strong>' + (result.client_id || 'Unknown') + '</strong></td>';
+                
+                // Project Name
+                const projectName = result.project_name || result.project_id || 
+                    `Project-${Math.round((result.historical_bid || 0) / 1000)}K`;
+                tableHtml += '<td>' + projectName + '</td>';
+                
+                // Historical Bid
+                const historicalBid = result.bid_amount || result.historical_bid || 0;
+                tableHtml += '<td>$' + historicalBid.toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                
+                // AI Recommended Bid
+                const aiRecommended = result.optimal_price || result.recommended_price || result.predicted_price || historicalBid;
+                const recommendDiff = historicalBid > 0 ? ((aiRecommended - historicalBid) / historicalBid * 100).toFixed(1) : 0;
+                const recommendColor = aiRecommended > historicalBid ? 'text-success' : 
+                    aiRecommended < historicalBid ? 'text-danger' : '';
+                tableHtml += '<td class="' + recommendColor + '">$' + 
+                    aiRecommended.toLocaleString(undefined, {maximumFractionDigits: 0}) + 
+                    ' (' + (recommendDiff > 0 ? '+' : '') + recommendDiff + '%)</td>';
+                
+                // Win Probability
+                const winProb = result.predicted_probability || result.win_probability || 0.5;
+                const probColor = winProb > 0.7 ? 'text-success' : winProb < 0.3 ? 'text-danger' : 'text-warning';
+                tableHtml += '<td class="' + probColor + '"><strong>' + 
+                    (winProb * 100).toFixed(1) + '%</strong></td>';
+                
+                // Predicted Outcome
+                const predColor = predictedWin ? 'badge-success' : 'badge-danger';
+                tableHtml += '<td><span class="badge ' + predColor + '">' + 
+                    (predictedWin ? 'WIN' : 'LOSS') + '</span></td>';
+                
+                // Actual Outcome
+                const actualColor = actualWin ? 'badge-success' : 'badge-danger';
+                tableHtml += '<td><span class="badge ' + actualColor + '">' + 
+                    (actualWin ? 'WON' : 'LOST') + '</span></td>';
+                
+                // Winning Bid
+                const winningBid = result.winning_price || 0;
+                const winningBidText = winningBid > 0 ? '$' + winningBid.toLocaleString(undefined, {maximumFractionDigits: 0}) : 
+                    (actualWin ? 'Our Bid' : 'N/A');
+                tableHtml += '<td>' + winningBidText + '</td>';
+                
+                // Accuracy
+                const accuracyIcon = isCorrect ? '✅' : '❌';
+                tableHtml += '<td style="text-align: center; font-size: 16px;">' + accuracyIcon + '</td>';
+                
+                // Margin Opportunity
+                const marginOpp = result.price_difference || result.margin_opportunity || 0;
+                if (actualWin && marginOpp > 0) {
+                    tableHtml += '<td class="text-success">+$' + 
+                        Math.abs(marginOpp).toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                } else if (!actualWin && marginOpp < 0) {
+                    tableHtml += '<td class="text-info">-$' + 
+                        Math.abs(marginOpp).toLocaleString(undefined, {maximumFractionDigits: 0}) + '</td>';
+                } else {
+                    tableHtml += '<td>-</td>';
+                }
+                
+                // Analysis
+                let analysis = '';
+                if (actualWin && predictedWin) {
+                    if (aiRecommended > historicalBid * 1.05) {
+                        analysis = '💰 Could have bid higher for more margin';
+                    } else {
+                        analysis = '✅ Good prediction and pricing';
+                    }
+                } else if (!actualWin && !predictedWin) {
+                    if (aiRecommended < historicalBid * 0.95) {
+                        analysis = '✅ Correctly avoided overbidding';
+                    } else {
+                        analysis = '✅ Correctly predicted loss';
+                    }
+                } else if (actualWin && !predictedWin) {
+                    analysis = '⚠️ Missed win opportunity';
+                } else {
+                    analysis = '❌ Overconfident prediction';
+                }
+                tableHtml += '<td style="font-size: 11px;">' + analysis + '</td>';
+                
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody>';
+            tableHtml += '</table>';
+            
+            if (totalRecords > displayLimit) {
+                tableHtml += '<div class="alert alert-info">';
+                tableHtml += '<p>Showing first ' + displayLimit + ' of ' + totalRecords + ' validation records. ';
+                tableHtml += 'All records are included in the performance metrics above.</p>';
+                tableHtml += '</div>';
+            }
+            
+            // Add legend
+            tableHtml += '<div class="card" style="margin-top: 20px; padding: 15px; background: #f8f9fa;">';
+            tableHtml += '<h5>📖 Table Legend</h5>';
+            tableHtml += '<div class="row">';
+            tableHtml += '<div class="col-md-6">';
+            tableHtml += '<p><span class="badge badge-success">Green rows</span> Correctly predicted wins</p>';
+            tableHtml += '<p><span class="badge badge-secondary">Gray rows</span> Correctly predicted losses</p>';
+            tableHtml += '</div>';
+            tableHtml += '<div class="col-md-6">';
+            tableHtml += '<p><span class="badge badge-warning">Yellow rows</span> Missed opportunities (false negatives)</p>';
+            tableHtml += '<p><span class="badge badge-danger">Red rows</span> Overconfident predictions (false positives)</p>';
+            tableHtml += '</div>';
+            tableHtml += '</div>';
+            tableHtml += '</div>';
+            
+            tableHtml += '</div>';
+            
+            container.innerHTML = tableHtml;
+        }
+        
+        // Get user-friendly labels for validation types
+        function getValidationTypeLabel(type) {
+            const labels = {
+                'cross_validation': 'Cross Validation Test',
+                'holdout': 'Complete Data Validation', 
+                'time_series': 'Time-Based Validation'
+            };
+            return labels[type] || 'Model Validation';
+        }
+        
+        // Get business-friendly explanations
+        function getValidationExplanation(type) {
+            const explanations = {
+                'cross_validation': 'We randomly selected bids from your history and tested if our AI would have predicted the right outcome.',
+                'holdout': 'We tested our AI against all your historical data to see how well it performs overall.',
+                'time_series': 'We tested how well our AI predicts outcomes using chronological data patterns.'
+            };
+            return explanations[type] || 'We tested our AI predictions against your actual bid outcomes.';
+        }
+        
+        // Business interpretation of accuracy
+        function getAccuracyInterpretation(accuracy) {
+            if (accuracy >= 0.8) return "Excellent - AI is very reliable for decision making";
+            if (accuracy >= 0.7) return "Good - AI provides solid guidance for most bids";
+            if (accuracy >= 0.6) return "Fair - AI can help but verify important decisions";
+            return "Needs improvement - Consider uploading more historical data";
+        }
+        
+        // Business interpretation of precision
+        function getPrecisionInterpretation(precision) {
+            if (precision >= 0.8) return "When AI says 'you'll win', it's usually right";
+            if (precision >= 0.7) return "AI is generally reliable when predicting wins";
+            if (precision >= 0.6) return "AI win predictions are moderately reliable";
+            return "Be cautious when AI predicts wins - verify independently";
+        }
+        
+        // Display business-friendly client performance using real data
+        function displayBusinessClientPerformance(clientPerformance) {
+            if (!clientPerformance || clientPerformance.length === 0) {
+                document.getElementById('client-performance').innerHTML = `
+                    <div class="alert alert-info">
+                        <p><strong>Client Performance:</strong> No client-specific data available for this test.</p>
+                        <p>Upload more historical data to see how well AI predicts for each client.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let perfHtml = '<h4>👥 AI Performance by Client</h4>';
+            perfHtml += '<div style="margin-bottom: 15px;">';
+            perfHtml += '<p><strong>How reliable is the AI for each of your clients?</strong></p>';
+            perfHtml += '</div>';
+            
+            perfHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
             perfHtml += '<thead><tr style="background: #f8f9fa;">';
-            perfHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Client</th>';
-            perfHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Accuracy</th>';
-            perfHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Predictions</th>';
-            perfHtml += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">MAE</th>';
+            perfHtml += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Client</th>';
+            perfHtml += '<th style="padding: 12px; border: 1px solid #ddd; text-align: center;">AI Accuracy</th>';
+            perfHtml += '<th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Bids Tested</th>';
+            perfHtml += '<th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Reliability</th>';
             perfHtml += '</tr></thead><tbody>';
             
-            const clientPerf = [
-                ['CLIENT-478331', '100.0%', '1', '0.162'],
-                ['CLIENT-E03A31', '100.0%', '1', '0.055'],
-                ['CLIENT-5D709C', '100.0%', '1', '0.044'],
-                ['CLIENT-18F36C', '100.0%', '1', '0.058'],
-                ['CLIENT-25F6ED', '50.0%', '2', '0.476'],
-                ['CLIENT-EFC41E', '0.0%', '1', '0.957'],
-                ['CLIENT-68A4BD', '0.0%', '1', '0.852'],
-                ['CLIENT-62DFA5', '0.0%', '1', '0.967'],
-                ['CLIENT-B9C961', '0.0%', '1', '0.979'],
-                ['CLIENT-C53331', '0.0%', '1', '0.842']
-            ];
-            
-            clientPerf.forEach(function(client) {
-                const accuracy = parseFloat(client[1]);
-                const rowClass = accuracy >= 100 ? 'style="background: #d4edda;"' : 
-                                accuracy >= 50 ? 'style="background: #fff3cd;"' : 
-                                'style="background: #f8d7da;"';
+            clientPerformance.forEach(function(client) {
+                const accuracy = client.accuracy * 100;
+                const reliabilityLabel = getReliabilityLabel(client.accuracy, client.total_predictions);
+                const rowColor = accuracy >= 70 ? '#d4edda' : accuracy >= 50 ? '#fff3cd' : '#f8d7da';
                 
-                perfHtml += '<tr ' + rowClass + '>';
-                perfHtml += '<td style="padding: 6px; border: 1px solid #ddd; font-weight: 500;">' + client[0] + '</td>';
-                perfHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + client[1] + '</td>';
-                perfHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + client[2] + '</td>';
-                perfHtml += '<td style="padding: 6px; border: 1px solid #ddd; text-align: center;">' + client[3] + '</td>';
+                perfHtml += `<tr style="background: ${rowColor};">`;
+                perfHtml += `<td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">${client.client_id}</td>`;
+                perfHtml += `<td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${accuracy.toFixed(1)}%</td>`;
+                perfHtml += `<td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${client.total_predictions}</td>`;
+                perfHtml += `<td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 12px;">${reliabilityLabel}</td>`;
                 perfHtml += '</tr>';
             });
             
             perfHtml += '</tbody></table>';
+            
+            // Add business interpretation
+            perfHtml += '<div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px;">';
+            perfHtml += '<h5>💡 What This Means:</h5>';
+            perfHtml += '<p><strong>Green rows:</strong> AI is very reliable for these clients - trust the predictions</p>';
+            perfHtml += '<p><strong>Yellow rows:</strong> AI is moderately reliable - use predictions with some caution</p>';
+            perfHtml += '<p><strong>Red rows:</strong> AI needs more data for these clients - be extra careful with predictions</p>';
+            perfHtml += '</div>';
+            
             document.getElementById('client-performance').innerHTML = perfHtml;
         }
         
+        // Get reliability label based on accuracy and sample size
+        function getReliabilityLabel(accuracy, sampleSize) {
+            if (sampleSize < 3) return "Need more data";
+            if (accuracy >= 0.8) return "Very reliable";
+            if (accuracy >= 0.7) return "Reliable";
+            if (accuracy >= 0.5) return "Moderate";
+            return "Unreliable";
+        }
+        
+        // Display business-friendly detailed validation results
+        function displayBusinessValidationDetails(validationResults, validationType) {
+            if (!validationResults || validationResults.length === 0) {
+                document.getElementById('detailed-results').innerHTML = `
+                    <div class="alert alert-info">
+                        <p><strong>Detailed Results:</strong> No detailed validation results available.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let detailsHtml = '<h4>📋 Detailed Test Results</h4>';
+            detailsHtml += '<p>Here\'s how the AI performed on individual bids from your history:</p>';
+            
+            // Show first 10 results to avoid overwhelming the user
+            const resultsToShow = validationResults.slice(0, 10);
+            
+            detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
+            detailsHtml += '<thead><tr style="background: #f8f9fa;">';
+            detailsHtml += '<th style="padding: 8px; border: 1px solid #ddd;">Client</th>';
+            detailsHtml += '<th style="padding: 8px; border: 1px solid #ddd;">Your Bid</th>';
+            detailsHtml += '<th style="padding: 8px; border: 1px solid #ddd;">AI Predicted</th>';
+            detailsHtml += '<th style="padding: 8px; border: 1px solid #ddd;">Actually Happened</th>';
+            detailsHtml += '<th style="padding: 8px; border: 1px solid #ddd;">Result</th>';
+            detailsHtml += '</tr></thead><tbody>';
+            
+            resultsToShow.forEach(function(result) {
+                const isCorrect = result.is_correct !== undefined ? result.is_correct : false;
+                const rowColor = isCorrect ? '#d4edda' : '#f8d7da';
+                const resultIcon = isCorrect ? '✅' : '❌';
+                const probability = result.predicted_probability || 0.5;
+                const confidenceText = (probability * 100).toFixed(1) + '% confident';
+                
+                // Handle both string and numeric outcome values
+                const predictedText = result.predicted_outcome_text || (result.predicted_outcome === 1 ? 'win' : 'loss');
+                const actualText = result.actual_outcome_text || (result.actual_outcome === 1 ? 'win' : 'loss');
+                
+                detailsHtml += '<tr style="background: ' + rowColor + ';">';
+                detailsHtml += '<td style="padding: 8px; border: 1px solid #ddd;">' + (result.client_id || 'Unknown') + '</td>';
+                detailsHtml += '<td style="padding: 8px; border: 1px solid #ddd;">$' + (result.bid_amount || 0).toLocaleString() + '</td>';
+                detailsHtml += '<td style="padding: 8px; border: 1px solid #ddd;">' + predictedText.toUpperCase() + '<br><small>' + confidenceText + '</small></td>';
+                detailsHtml += '<td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">' + actualText.toUpperCase() + '</td>';
+                detailsHtml += '<td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 16px;">' + resultIcon + '</td>';
+                detailsHtml += '</tr>';
+            });
+            
+            detailsHtml += '</tbody></table>';
+            
+            if (validationResults.length > 10) {
+                detailsHtml += '<p style="margin-top: 10px; font-style: italic;">Showing first 10 of ' + validationResults.length + ' test results. All results were used to calculate the accuracy metrics above.</p>';
+            }
+            
+            document.getElementById('detailed-results').innerHTML = detailsHtml;
+        }
+        
+        // OLD FUNCTION - REMOVING (replaced by displayBusinessValidationDetails)
         // Display Detailed Validation Results - DYNAMIC API-BASED
-        async function displayDetailedValidationResults() {
+        async function displayDetailedValidationResults_OLD() {
             let detailHtml = '<div class="alert alert-info">';
             detailHtml += '<h4>📋 How This Validation Works:</h4>';
             detailHtml += '<p>1. <strong>Historical Bid:</strong> What we actually bid on past projects</p>';
@@ -3218,7 +3913,11 @@
         
         // Load Feature Importance
         async function loadFeatureImportance() {
+            // Use cached version first
+            await loadFeatureImportanceWithCache();
+            
             try {
+                // Also update the feature importance table if needed
                 const response = await fetch(API_BASE_URL + '/api/feature-importance');
                 if (response.ok) {
                     const data = await response.json();
@@ -3327,11 +4026,11 @@
             const marketShare = competitiveData.market_share || 0;
             
             document.getElementById('market-position').innerHTML = 
-                '<div class="alert alert-' + (marketShare > 0.15 ? 'success' : 'info') + '">' +
+                '<div class="alert alert-' + (marketShare > 15 ? 'success' : 'info') + '">' +
                 '<h4>📊 Market Position</h4>' +
                 '<p><strong>Your Rank:</strong> ' + marketRank + (totalCompetitors > 0 ? ' out of ' + totalCompetitors + ' active competitors' : '') + '</p>' +
-                '<p><strong>Market Share:</strong> ' + (marketShare * 100).toFixed(1) + '% in selected segment</p>' +
-                '<p><strong>Competitive Status:</strong> ' + (marketShare > 0.2 ? 'Market Leader' : marketShare > 0.1 ? 'Strong Player' : 'Growing Presence') + '</p>' +
+                '<p><strong>Market Share:</strong> ' + marketShare.toFixed(1) + '% in selected segment</p>' +
+                '<p><strong>Competitive Status:</strong> ' + (marketShare > 20 ? 'Market Leader' : marketShare > 10 ? 'Strong Player' : 'Growing Presence') + '</p>' +
                 '</div>';
             
             // Pricing comparison based on real data
@@ -4142,6 +4841,10 @@
                     resultsDiv.classList.remove('hidden');
                     showAlert('Self-training completed with ' + improvement + '% improvement!', 'success');
                     
+                    // Clear model-related cached data since model was retrained
+                    GlobalDataStore.clearModelData();
+                    console.log('🔄 Cleared model data cache after self-training');
+                    
                     // Refresh metrics
                     loadLearningMetrics();
                     
@@ -4234,6 +4937,10 @@
                     
                     resultsDiv.classList.remove('hidden');
                     showAlert('Continuous improvement completed!', 'success');
+                    
+                    // Clear all cached data since model was comprehensively updated
+                    GlobalDataStore.clearAll();
+                    console.log('🔄 Cleared all cached data after continuous improvement');
                     
                     // Refresh metrics
                     loadLearningMetrics();

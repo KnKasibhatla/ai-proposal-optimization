@@ -14,8 +14,10 @@ def add_fixed_smart_pricing_routes(app):
     def api_predict_pricing_fixed():
         """Fixed pricing prediction with guaranteed dynamic results"""
         try:
-            # Get current data from the global variable
-            from app import current_data
+            # Get current data from the Flask app context
+            import sys
+            app_module = sys.modules.get('app')
+            current_data = getattr(app_module, 'current_data', None) if app_module else None
             
             if current_data is None or len(current_data) == 0:
                 return jsonify({'error': 'No historical data available. Please upload data first.'}), 400
@@ -63,7 +65,8 @@ def add_fixed_smart_pricing_routes(app):
     def api_retrain_fixed_model():
         """Retrain the fixed smart pricing model"""
         try:
-            from app import current_data
+            import app
+            current_data = getattr(app, 'current_data', None)
             
             if current_data is None or len(current_data) == 0:
                 return jsonify({'error': 'No data available for retraining'}), 400
@@ -89,7 +92,8 @@ def add_fixed_smart_pricing_routes(app):
     def api_smart_pricing_status():
         """Get status of the fixed smart pricing system"""
         try:
-            from app import current_data
+            import app
+            current_data = getattr(app, 'current_data', None)
             
             status = {
                 'model_trained': fixed_smart_pricing_engine.trained,
